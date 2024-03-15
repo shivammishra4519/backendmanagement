@@ -1,5 +1,6 @@
 const { getDB } = require('../dbconnection');
 const { deviceDetails, sellDeviceDetails } = require('../model/add-device-model');
+const moment = require('moment');
 
 
 const addDevice = async (req, res) => {
@@ -66,40 +67,12 @@ const deviceData = async (req, res) => {
 };
 
 
-const sellDevice = async (req, res) => {
-    try {
-        const data = req.body;
-        const validationError = sellDeviceDetails.validate(data);
-        if (validationError.error) {
-            res.status(400).json({ message: validationError.error.message });
-        } else {
-            const db = getDB();
-            const collection = db.collection('selldevice');
-            const result = await collection.findOne({ imei1: data.imei1 });
-            if (result) {
-                res.status(400).json({ message: 'Device already sold' });
-            } else {
-
-                const number = data.customerNumber;
-                const financeAmount = data.financeAmount;
-                const collection1 = db.collection('customers');
-
-                const find = await collection1.updateOne(
-                    { number: number }, // Filter for the document using its ID
-                    { $set: { currentCreadit: financeAmount } } // Update the currentCreadit field
-                );
-
-
-                const response = await collection.insertOne(data);
-                res.status(200).json(response);
-            }
-        }
-    } catch (error) {
-        return res.status(400).json({ message: error.message });
-    }
-}
 
 
 
 
-module.exports = { addDevice, brandNames, deviceData, sellDevice };
+
+
+
+
+module.exports = { addDevice, brandNames, deviceData, };

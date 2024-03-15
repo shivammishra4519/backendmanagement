@@ -104,18 +104,26 @@ router.post('/upload', upload.fields([
     }
 });
 
-
 router.post('/images/', async (req, res) => {
     try {
-      const imageName = req.body.fileName;
-      const imagePath = path.join(__dirname, 'uploads', imageName);
-  console.log(imageName)
-      // Send the image file as a response
-      res.status(200).json(imagePath);
+        const imageName = req.body.fileName;
+        const imagePath = path.join(__dirname, 'uploads', imageName);
+        
+        // Check if the image file exists
+        if (fs.existsSync(imagePath)) {
+            // Set appropriate content-type header
+            res.setHeader('Content-Type', 'image/png'); // Adjust content type based on your image type
+            // Send the image file as a response
+            res.sendFile(imagePath);
+        } else {
+            // If the image file does not exist, return a 404 Not Found error
+            res.status(404).json({ message: 'Image not found' });
+        }
     } catch (error) {
-      console.error('Error serving image:', error);
-      res.status(500).json({ message: 'Internal server error' });
+        console.error('Error serving image:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-  });
+});
+
 
 module.exports = router;

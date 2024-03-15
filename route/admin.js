@@ -1,9 +1,9 @@
-const {adminlogin}=require('../controler/admin-controler')
+const {login}=require('../controler/admin-controler')
 const express = require('express');
 const router = express.Router();
 
 
-router.post('/login',adminlogin);
+router.post('/login',login);
 
 
 module.exports = router;
