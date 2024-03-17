@@ -5,10 +5,12 @@ const adminRoute = require('./route/admin');
 const user=require('./route/user-route')
 const device=require('./route/devices-route')
 const image=require('./uploadingfile');
+const otp=require('./otp');
 const emi=require('./route/installmen-route');
 const employee=require('./route/employee-route');
 const fund=require('./route/fund-transfer');
 const wallet=require('./route/wallet-route')
+const sms=require('./route/sms-route')
 const cors=require('cors')
 const bodyParser = require('body-parser');
 require('dotenv').config();
@@ -29,6 +31,8 @@ app.use('/emi',emi);
 app.use('/employee',employee);
 app.use('/fund',fund)
 app.use('/wallet',wallet)
+app.use('/api',otp);
+app.use('/sms',sms);
 
 
 app.get('/', (req, res) => {

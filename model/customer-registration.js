@@ -12,7 +12,8 @@ const customerschema = joi.object({
     district: joi.string().required(),
     images:joi.required(),
     dob:joi.date().required(),
-    address:joi.string().required()
+    address:joi.string().required(),
+    otp:joi.any()
 });
 
 module.exports = { customerschema }; // Corrected export statement

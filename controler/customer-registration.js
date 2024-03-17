@@ -35,6 +35,7 @@ const customerRegister = async (req, res) => {
                 data.walletId = walletId.insertedId;
                 data.active = true;
                 data.shop = decodedToken.shop;
+                delete data.otp;
                 const result = await collection.insertOne(data);
                 return res.status(200).json({ message: 'Customer registered successfully', result });
             } catch (error) {

@@ -51,9 +51,12 @@ const payInstallment = async (req, res) => {
             const db = getDB();
             const wallet = db.collection('wallets');
             const balanceCheck = await wallet.findOne({ user_id: employeId });
+            // checking employer
             if (!balanceCheck) {
                 return res.status(400).json({ 'message': 'somtheing went wrong' });
             }
+
+            // checking employer amount
             if (balanceCheck.amount < data.amount) {
                 return res.status(400).json({ message: 'insufficenet balance' })
             }
@@ -62,24 +65,26 @@ const payInstallment = async (req, res) => {
             const result = await collection.findOne({ number: employeId });
             const dbPin = result.pin;
             const isPinMatched = (dbPin == data.pin);
+
+            // comapre password
             if (!isPinMatched) {
                 return res.status(400).json({ 'message': 'incoorect pin' });
             }
-
-            
-
             // Return success response
             const customerCheck = await wallet.findOne({ user_id: data.user_id });
+            // checking user exitence
             if (!customerCheck) {
                 return res.status(400).json({ 'message': 'somtheing went wrong' });
             }
+
+            // checking creadit of customer
             if (customerCheck.credit <= data.amount) {
                 return res.status(400).json({ message: 'No creadit amount' })
             }
 
+            // creating details for history employer to customer
             const senderOpeningAmount = balanceCheck.amount;
             const receverOpeningAmount = customerCheck.credit;
-
             const filterRecever = { user_id: parseInt(data.user_id) };
             const filterSender = { user_id: decodedToken.number };
             const updateRecever = { $inc: { credit: -data.amount } };
@@ -114,7 +119,8 @@ const payInstallment = async (req, res) => {
                 date,
                 amount: transferAmount,
                 senderId,
-                receverId
+                receverId,
+                type: 'emi paid'
             }
 
             const createTransactionHistroy = await transectionHistory.insertOne(transectionInfo);
@@ -123,13 +129,59 @@ const payInstallment = async (req, res) => {
                 return res.status(400).json({ message: 'invalid request' })
             }
 
+            //  end of empolyer to customer transection details
+
+
+            // starting of customer to admin
+            const admin = await collection.findOne({ role: 'admin' });
+            if (!admin) {
+                return res.status(400).json({ message: 'somtheing went wrong' })
+            }
+            const adminId=admin.number
+
+            const adminWallet=await wallet.findOne({user_id:adminId});
+            const adminOpening = adminWallet.amount;
+            const filterAdmin = { user_id:adminId};
+            const updateAdmin = { $inc: { amount: data.amount } };
+
+            const resultAdmin = await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: true });
+            const adminWalletAfter=await wallet.findOne({user_id:adminId});
+            const adminClosing = adminWalletAfter.amount;
+            
+            const transectionInfo1 = {
+                senderDetails: {
+
+                    senderOpeningAmount:receverOpeningAmount,
+                    senderCloseingAmount:receverCloseingAmount,
+                    
+                },
+                receverDetails: {
+                    receverOpeningAmount:adminOpening,
+                    receverCloseingAmount:adminClosing
+                },
+                TransactionID,
+                time,
+                date,
+                amount: transferAmount,
+                senderId,
+                receverId:adminId,
+                type: 'emi paid'
+            }
+
+            const createTransactionHistroy1 = await transectionHistory.insertOne(transectionInfo1);
+
+            if (!createTransactionHistroy1) {
+                return res.status(400).json({ message: 'invalid request' })
+            }
+
             const emiCollection = db.collection('emidetails');
             const installmentId = data.installmentId;
-            const loanId = data.loanId;
+            const loanId = data.loan_Id;
             const filter = {
-                loanId: loanId,
+                loan_Id: loanId,
                 "installments.installmentId": installmentId
             };
+            console.log('filter',filter)
             const update = {
                 $set: {
                     "installments.$[elem].paid": true,
@@ -141,13 +193,13 @@ const payInstallment = async (req, res) => {
                 returnOriginal: false
             };
 
+
             const updatedEmi = await emiCollection.findOneAndUpdate(filter, update, options);
-            console.log(updatedEmi)
 
             if (!updatedEmi) {
                 return res.status(400).json({ 'message': 'Invalid loan id or installment id' });
             }
-res.status(200).json({message:'emi paid succesfully'})
+            res.status(200).json({ message: 'emi paid succesfully' })
 
         });
     } catch (error) {

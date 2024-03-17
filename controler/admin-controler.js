@@ -41,4 +41,29 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { login };
+
+const veirfyToken=async(req,res)=>{
+    try{
+      
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            res.status(200).json({message:'success'})
+        });
+    }catch (error) {
+        return res.status(500).json({ 'message': 'Internal server error' });
+    }
+}
+
+module.exports = { login,veirfyToken };

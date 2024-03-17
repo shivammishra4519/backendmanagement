@@ -31,6 +31,9 @@ const fundTransferFunction = async (req, res) => {
             try {
                 const db = getDB();
                 const collection = db.collection('wallets');
+                if(data.amount<=0){
+                    return res.status(400).json({error:'invalid amount'})
+                }
                 const checkAmount = await collection.findOne({ user_id: decodedToken.number });
                 const amount = checkAmount.amount;
                 if (amount < data.amount) {
@@ -49,11 +52,9 @@ const fundTransferFunction = async (req, res) => {
 
                 // pin checking
                 const dbPin = userExit.pin;
-                console.log('dbpin', dbPin);
                 const pin = parseInt(data.pin);
-                console.log('userpin', pin);
                 const isPinCorrect = (dbPin == pin);
-                console.log('dbpin', isPinCorrect);
+               
                 if (!isPinCorrect) {
                     return res.status(400).json({ message: 'incoorect Pin' })
                 }
@@ -67,7 +68,7 @@ const fundTransferFunction = async (req, res) => {
                 // Perform update and get updated document
                 const result1 = await collection.findOneAndUpdate(filterSender, updateSender, { returnOriginal: true });
                 const result2 = await collection.findOneAndUpdate(filterRecever, updateRecever, { returnOriginal: true });
-                console.log("uos", result1)
+
 
                 const checkAmountAfter = await collection.findOne({ user_id: decodedToken.number });
                 const checkUserAfter = await collection.findOne({ user_id: number });
@@ -97,7 +98,8 @@ const fundTransferFunction = async (req, res) => {
                     date,
                     amount: transferAmount,
                     senderId,
-                    receverId
+                    receverId,
+                    type:'Direct'
                 }
 
                 const createTransactionHistroy = await transectionHistory.insertOne(transectionInfo);
@@ -111,7 +113,6 @@ const fundTransferFunction = async (req, res) => {
 
 
             } catch (error) {
-                console.error('Error:', error);
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
