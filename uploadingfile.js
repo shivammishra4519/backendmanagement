@@ -26,83 +26,54 @@ const uploadSchema = Joi.object({
 });
 
 
-
 router.post('/upload', upload.fields([
     { name: 'profilePictures', maxCount: 1 },
     { name: 'panCardImages', maxCount: 1 },
     { name: 'adharCardImages', maxCount: 1 },
     { name: 'otherDocumentImages', maxCount: 1 }
-]), (req, res) => {
+]), async (req, res) => {
     try {
         const filenames = {};
 
+        // Helper function to validate and process an image upload
+        const processImageUpload = async (fieldName) => {
+            if (!req.files[fieldName] || req.files[fieldName].length === 0) {
+                throw new Error(`No file uploaded for ${fieldName}`);
+            }
+            const file = req.files[fieldName][0];
+            console.log('Processing file:', file.originalname);
+            const { error, value } = uploadSchema.validate({
+                filename: file.filename,
+                mimetype: file.mimetype,
+                buffer: file.buffer
+            });
+            if (error) {
+                fs.unlinkSync(file.path);
+                console.log('Validation error:', error.details[0].message);
+                throw new Error(error.details[0].message);
+            }
+            filenames[fieldName] = file.filename;
+            console.log('File processed successfully:', file.originalname);
+        };
+
         // Validate and process profile picture
-        if (req.files['profilePictures'] && req.files['profilePictures'].length > 0) {
-            const file = req.files['profilePictures'][0];
-            const { error, value } = uploadSchema.validate({
-                filename: file.filename,
-                mimetype: file.mimetype,
-                buffer: file.buffer
-            });
-            if (error) {
-                fs.unlinkSync(file.path);
-                return res.status(400).json({ error: error.details[0].message });
-            }
-            filenames['profilePictures'] = file.filename;
-        }
-
+        await processImageUpload('profilePictures');
         // Validate and process PAN card image
-        if (req.files['panCardImages'] && req.files['panCardImages'].length > 0) {
-            const file = req.files['panCardImages'][0];
-            const { error, value } = uploadSchema.validate({
-                filename: file.filename,
-                mimetype: file.mimetype,
-                buffer: file.buffer
-            });
-            if (error) {
-                fs.unlinkSync(file.path);
-                return res.status(400).json({ error: error.details[0].message });
-            }
-            filenames['panCardImages'] = file.filename;
-        }
-
+        await processImageUpload('panCardImages');
         // Validate and process Adhar card image
-        if (req.files['adharCardImages'] && req.files['adharCardImages'].length > 0) {
-            const file = req.files['adharCardImages'][0];
-            const { error, value } = uploadSchema.validate({
-                filename: file.filename,
-                mimetype: file.mimetype,
-                buffer: file.buffer
-            });
-            if (error) {
-                fs.unlinkSync(file.path);
-                return res.status(400).json({ error: error.details[0].message });
-            }
-            filenames['adharCardImages'] = file.filename;
-        }
-
+        await processImageUpload('adharCardImages');
         // Validate and process other document image
-        if (req.files['otherDocumentImages'] && req.files['otherDocumentImages'].length > 0) {
-            const file = req.files['otherDocumentImages'][0];
-            const { error, value } = uploadSchema.validate({
-                filename: file.filename,
-                mimetype: file.mimetype,
-                buffer: file.buffer
-            });
-            if (error) {
-                fs.unlinkSync(file.path);
-                return res.status(400).json({ error: error.details[0].message });
-            }
-            filenames['otherDocumentImages'] = file.filename;
-        }
-        
+        await processImageUpload('otherDocumentImages');
+
         // Sending a response with all uploaded filenames
+        console.log('Images uploaded successfully:', filenames);
         res.status(200).json({ filenames: filenames, message: 'Images uploaded successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Error uploading images');
+        console.error('Error uploading images:', error);
+        res.status(400).json({ error: error.message });
     }
 });
+
 
 router.post('/images/', async (req, res) => {
     try {

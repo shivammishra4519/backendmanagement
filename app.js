@@ -11,6 +11,10 @@ const employee=require('./route/employee-route');
 const fund=require('./route/fund-transfer');
 const wallet=require('./route/wallet-route')
 const sms=require('./route/sms-route')
+const adhar=require('./adhar')
+const details=require('./route/details-route')
+const forgetPassword=require('./route/forget-password-route');
+const brand=require('./route/brand-route')
 const cors=require('cors')
 const bodyParser = require('body-parser');
 require('dotenv').config();
@@ -33,6 +37,10 @@ app.use('/fund',fund)
 app.use('/wallet',wallet)
 app.use('/api',otp);
 app.use('/sms',sms);
+app.use('/adhar',adhar);
+app.use('/forget',forgetPassword);
+app.use('/details',details);
+app.use('/brand',brand);
 
 
 app.get('/', (req, res) => {

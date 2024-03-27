@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const key = process.env.secretkey;
+const adminId = process.env.admin;
+const adminstratorId = process.env.adminstrator;
 const { deviceDetails, sellDeviceDetails } = require('../model/add-device-model');
 const moment = require('moment');
 const crypto = require('crypto');
@@ -35,83 +37,181 @@ const sellDevice = async (req, res) => {
             const collection = db.collection('selldevice');
             const result = await collection.findOne({ imei1: data.imei1 });
             if (result) {
-                res.status(400).json({ message: 'Device already sold' });
-            } else {
-
-                const number = data.customerNumber;
-                const financeAmount = data.financeAmount;
-                const date = getCurrentDate();
-
-                const purchaseDate = date; // Example purchase date
-                const totalInstallments = parseInt(data.emi); // Total number of installments
-                const installmentAmount = data.emiAmount; // Amount for each installment
-                const installments = generateInstallments(purchaseDate, totalInstallments, installmentAmount);
-                const loanId = generateUniqueReadableNumber();
-
-                const emiCollection = db.collection('emidetails');
-                const obj = {
-                    user_id: parseInt(number),
-                    installments,
-                    loan_Id: loanId
-                }
-
-                const isAlreadyPresent = await emiCollection.findOne({ loan_id: loanId });
-
-                if (isAlreadyPresent) {
-                    return res.status(400).json({ 'message': 'bad request ' })
-                }
-                const loanInsert = await emiCollection.insertOne(obj);
-                // wallet entry
-                const wallet = db.collection('wallets');
-                const filter = { user_id: parseInt(number) };
-                const filter1 = { user_id: decodedToken.number };
-                const update = { $inc: { credit: data.financeAmount } };
-                const update1 = { $inc: { amount: data.mrp } };
-
-                // Get amount before update
-                const beforeUpdate1 = await wallet.findOne(filter);
-                const beforeUpdate2 = await wallet.findOne(filter1);
-
-                // Perform update and get updated document
-                const result1 = await wallet.findOneAndUpdate(filter, update, { returnOriginal: true });
-                const result2 = await wallet.findOneAndUpdate(filter1, update1, { returnOriginal: true });
-
-
-                const afterUpdate1 = await wallet.findOne(filter);
-                const afterUpdate2 = await wallet.findOne(filter1);
-
-
-
-                data.loan_Id = loanId;
-                data.date = date;
-                const response = await collection.insertOne(data);
-                const from = loanId;
-                const to = decodedToken.number;
-                const amount = data.mrp;
-
-
-                const histroyDetails = createTransactionHistroy(from, to, amount)
-                const transection = db.collection('transectiondetails');
-                const transectionEntry = await transection.insertOne(histroyDetails)
-                const toDetails = {
-                    openingAmount: beforeUpdate2.amount,
-                    closeingAmount: afterUpdate2.amount,
-                    TransactionID: histroyDetails.TransactionID,
-                    user_id: decodedToken.number
-                }
-
-                const fromDetails = {
-                    openingAmount: beforeUpdate1.credit,
-                    closeingAmount: afterUpdate1.credit,
-                    TransactionID: histroyDetails.TransactionID,
-                    user_id: parseInt(number)
-                }
-                const openingCollection = db.collection('OpeningAndCloseing');
-                const datainsert = await openingCollection.insertOne(toDetails);
-                const datainsert1 = await openingCollection.insertOne(fromDetails);
-                const details = createTransactionHistroy()
-                res.status(200).json(response);
+                return res.status(400).json({ message: 'Device already sold' });
             }
+
+            const number = data.customerNumber;
+            const iSCustomerExit = await db.collection('customers').findOne({ number: parseInt(number) });
+            if (!iSCustomerExit) {
+                return res.status(400).json({ message: 'invalid request1' })
+            }
+            const totalInstallments = parseInt(data.emi); // Total number of installments
+            const installmentAmount = data.emiAmount;
+            const installments = generateInstallments(totalInstallments, installmentAmount);
+            const loanId = generateUniqueReadableNumber();
+            data.loanId = loanId;
+            data.installments = installments;
+            data.purchaseDate = getCurrentDate();
+            data.time = getCurrentTime();
+
+
+            // first transection admin to customer   
+            const wallet = db.collection('wallets');
+            const transectionHistory = db.collection('transectiondetails');
+            // transection of remaning amount of shopkeeper from admin  
+            const amountCreaditToShop = data.mrp - data.downPayment;  // calulating amount 
+            const filterAdmin = { user_id: parseInt(adminId) };
+            const updateAdmin = { $inc: { amount: - amountCreaditToShop } };
+            const adminWalet = await wallet.findOne(filterAdmin);
+            if (adminWalet.amount < amountCreaditToShop) {
+                return res.status(400).json({ error: 'invalid request' })
+            }
+            const resultAdmin = await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+
+            if (!resultAdmin) {
+                return res.status(400).json({ error: 'somtheing went wrong1' })
+            }
+            const adminWaletAfterF = await wallet.findOne(filterAdmin);
+
+            if (!resultAdmin) {
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong2' })
+            }
+
+            const filter1Shop = { user_id: decodedToken.number };
+            const shopWallet = await wallet.findOne(filter1Shop);
+
+            if (!shopWallet) {
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong3' })
+            }
+
+            const update1Shop = { $inc: { amount: amountCreaditToShop } };
+            const shopResult = await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+
+            if (!shopResult) {
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong4' })
+            }
+
+            const shopWalletA = await wallet.findOne(filter1Shop);
+
+            if (!shopWalletA) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                const shopResult = await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong5' })
+            }
+            const tId = generateTransactionID();
+            const transectionInfo = {
+                senderDetails: {
+                    senderOpeningAmount: adminWalet.amount,
+                    senderCloseingAmount: adminWaletAfterF.amount
+                },
+                receverDetails: {
+                    receverOpeningAmount: shopWallet.amount,
+                    receverCloseingAmount: shopWalletA.amount
+                },
+                TransactionID: tId,
+                date: getCurrentDate(),
+                time: getCurrentTime(),
+                amount: amountCreaditToShop,
+                senderId: parseInt(adminId),
+                receverId: decodedToken.number,
+                type: 'direct',
+                loanId: loanId
+            }
+
+            const filterCustomer = { user_id: parseInt(number) };
+            const customerWallet = await wallet.findOne(filterCustomer);
+            if (!customerWallet) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong' });
+            }
+            const updateCustomer = { $inc: { credit: data.financeAmount } };
+            const resultCustomer = await wallet.findOneAndUpdate(filterCustomer, updateCustomer, { returnOriginal: true });
+
+            if (!resultCustomer) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong' });
+            }
+            const customerWalletA = await wallet.findOne(filterCustomer);
+
+            if (!customerWalletA) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong' });
+            }
+            const tid1 = generateTransactionID();
+
+            const loanHistory = {
+                customerId: parseInt(number),
+                opening: customerWallet.credit,
+                closing: customerWalletA.credit,
+                loanId: loanId,
+                type: 'loan',
+                LoanAmount: amountCreaditToShop,
+                totalAmount: data.financeAmount,
+                date: getCurrentDate(),
+                time: getCurrentTime(),
+                interest: data.interest,
+                fileCharge: data.fileCharge,
+                TransactionID: tid1,
+            }
+
+
+            const createTransactionHistroy = await transectionHistory.insertOne(transectionInfo);
+            if (!createTransactionHistroy) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                return res.status(400).json({ error: 'somtheing went wrong' });
+            }
+            const loanRecord = await transectionHistory.insertOne(loanHistory);
+            if (!loanRecord) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                await transectionHistory.deleteOne({ TransactionID: tId });
+                return res.status(400).json({ error: 'somtheing went wrong' });
+            }
+
+            if (!createTransactionHistroy) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                await transectionHistory.deleteOne({ TransactionID: tId });
+                await transectionHistory.deleteOne({ TransactionID: tid1 });
+                return res.status(400).json({ error: 'somtheing went wrong' })
+            }
+
+            const isInsertResult = await collection.insertOne(data);
+            if (!isInsertResult) {
+                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
+                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
+                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
+                await transectionHistory.deleteOne({ TransactionID: tId });
+                await transectionHistory.deleteOne({ TransactionID: tid1 });
+                return res.status(400).json({ error: 'somtheing went wrong' })
+            }
+            res.status(200).json({ message: 'success' })
+
         });
     } catch (error) {
         return res.status(400).json({ message: error.message });
@@ -122,16 +222,13 @@ const sellDevice = async (req, res) => {
 
 
 
-function generateInstallments(purchaseDate, totalInstallments, installmentAmount) {
-    const installments = [];
-    const purchaseMoment = moment(purchaseDate);
-    const isAfter24 = purchaseMoment.date() >= 24;
-    let currentDate = purchaseMoment.clone().startOf('month');
 
-    if (isAfter24) {
-        currentDate.add(2, 'months').startOf('month');
-    } else {
-        currentDate.add(1, 'months').startOf('month');
+function generateInstallments(totalInstallments, installmentAmount) {
+    const installments = [];
+    const purchaseMoment = moment(); // Get the current date
+    let currentDate = purchaseMoment.clone().add(1, 'months').startOf('month');
+    if (purchaseMoment.date() >= 24) {
+        currentDate.add(1, 'months');
     }
 
     for (let i = 0; i < totalInstallments; i++) {
@@ -307,4 +404,4 @@ const filterData = async (req, res) => {
 
 
 
-module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime,filterData }
+module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData }

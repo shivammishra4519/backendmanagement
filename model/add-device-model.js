@@ -5,11 +5,9 @@ const deviceDetails=Joi.object({
     model: Joi.string().required(),
     dpPrice: Joi.number().required(),
     margin: Joi.number().required(),
-    mrp: Joi.number().required(),
     interest: Joi.number().required(),
     fileCharge: Joi.number().required(),
     downPayment: Joi.number().required(),
-    totalAmount: Joi.number().required()
 })
 
 
@@ -21,12 +19,13 @@ sellDeviceDetails=Joi.object({
     mrp: Joi.number().required(),
     fileCharge: Joi.number().required(),
     totalAmount: Joi.number().required(),
-    sellAmount: Joi.string().required(),
-    downPayment: Joi.string().required(),
+    discount: Joi.number().required(),
+    downPayment: Joi.number().required(),
     financeAmount: Joi.number().required(),
-    emi: Joi.string().required(),
+    emi: Joi.number().required(),
     emiAmount: Joi.number().required(),
-    customerNumber:Joi.number().required()
+    customerNumber:Joi.number().required(),
+    interest:Joi.number().required()
 })
 
 module.exports={deviceDetails,sellDeviceDetails}

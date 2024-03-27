@@ -99,7 +99,7 @@ const fundTransferFunction = async (req, res) => {
                     amount: transferAmount,
                     senderId,
                     receverId,
-                    type:'Direct'
+                    type:'direct'
                 }
 
                 const createTransactionHistroy = await transectionHistory.insertOne(transectionInfo);
@@ -184,7 +184,7 @@ const transectiondetails = async (req, res) => {
         const collection = db.collection('transectiondetails');
         
         // Sorting and limiting the documents
-        const filterData = await collection.find().sort({ createdAt: -1 }).limit(100).toArray();
+        const filterData = await collection.find({type:'direct'}).sort({ createdAt: -1 }).limit(100).toArray();
 
         // Sending the response with the filtered documents
         res.status(200).json(filterData);

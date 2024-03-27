@@ -129,7 +129,6 @@ const deleteTemplate = async (req, res) => {
 const getTemplateByTemplateId = async (req, res) => {
     try {
         const type = req.body.type;
-        console.log(type)
         const db = getDB();
         const collection = db.collection('smstemplates');
         const result=await collection.findOne({smsType:type})
@@ -141,4 +140,5 @@ const getTemplateByTemplateId = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
+
 module.exports = { setTemplate, viewTemplate, deleteTemplate,getTemplateByTemplateId }

@@ -1,6 +1,11 @@
 const { getDB } = require('../dbconnection');
 const { deviceDetails, sellDeviceDetails } = require('../model/add-device-model');
 const moment = require('moment');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+const key = process.env.secretkey;
+const tokenExpiry = '12h';
 
 
 const addDevice = async (req, res) => {
@@ -58,7 +63,7 @@ const deviceData = async (req, res) => {
             model: data.model
         };
 
-        const result = await collection.find(query).toArray(); // Convert cursor to array
+        const result = await collection.findOne(query); // Convert cursor to array
 
         return res.status(200).json(result); // Return the result array as JSON
     } catch (error) {
@@ -68,6 +73,35 @@ const deviceData = async (req, res) => {
 
 
 
+const viewAllDevice = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+      
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const db = getDB();
+            const collection = db.collection('devices');
+            const result = await collection.find().toArray();
+            if (!result) {
+                return res.status(400).json({ message: 'invalid request' })
+            }
+            res.status(200).json(result);
+        })
+    } catch (error) {
+        return res.status(400).json(error); // Return any error as JSON
+    }
+}
 
 
 
@@ -75,4 +109,4 @@ const deviceData = async (req, res) => {
 
 
 
-module.exports = { addDevice, brandNames, deviceData, };
+module.exports = { addDevice, brandNames, deviceData, viewAllDevice};

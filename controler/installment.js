@@ -14,12 +14,15 @@ const viewEmidetailsByNumber = async (req, res) => {
         }
 
         const db = getDB()
-        const collection = db.collection('emidetails');
-        const result = await collection.findOne({ user_id: data.number });
+        const collection = db.collection('selldevice');
+        const number=data.number;
+        const strNumber=number.toString()
+        const result = await collection.findOne({ customerNumber: strNumber });
 
         if (!result) {
             return res.status(400).json({ message: 'invalid user id' })
         }
+    
         res.status(200).json(result)
 
 
@@ -53,7 +56,7 @@ const payInstallment = async (req, res) => {
             const balanceCheck = await wallet.findOne({ user_id: employeId });
             // checking employer
             if (!balanceCheck) {
-                return res.status(400).json({ 'message': 'somtheing went wrong' });
+                return res.status(400).json({ 'message': 'somtheing went wrong 1' });
             }
 
             // checking employer amount
@@ -71,14 +74,16 @@ const payInstallment = async (req, res) => {
                 return res.status(400).json({ 'message': 'incoorect pin' });
             }
             // Return success response
-            const customerCheck = await wallet.findOne({ user_id: data.user_id });
+            const customerCheck = await wallet.findOne({ user_id: parseInt(data.user_id )});
             // checking user exitence
+
             if (!customerCheck) {
-                return res.status(400).json({ 'message': 'somtheing went wrong' });
+                return res.status(400).json({ message: 'somtheing went wrong 1' });
             }
 
             // checking creadit of customer
-            if (customerCheck.credit <= data.amount) {
+           
+            if (!(customerCheck.credit >= data.amount)) {
                 return res.status(400).json({ message: 'No creadit amount' })
             }
 
@@ -93,7 +98,7 @@ const payInstallment = async (req, res) => {
             const result1 = await wallet.findOneAndUpdate(filterSender, updateSender, { returnOriginal: true });
             const result2 = await wallet.findOneAndUpdate(filterRecever, updateRecever, { returnOriginal: true });
             const checkAmountAfter = await wallet.findOne({ user_id: employeId });
-            const customerCheckAfter = await wallet.findOne({ user_id: data.user_id });
+            const customerCheckAfter = await wallet.findOne({ user_id: parseInt(data.user_id )});
             const transectionHistory = db.collection('transectiondetails');
 
             const senderCloseingAmount = checkAmountAfter.amount;
@@ -120,7 +125,7 @@ const payInstallment = async (req, res) => {
                 amount: transferAmount,
                 senderId,
                 receverId,
-                type: 'emi paid'
+                type: 'direct'
             }
 
             const createTransactionHistroy = await transectionHistory.insertOne(transectionInfo);
@@ -173,12 +178,12 @@ const payInstallment = async (req, res) => {
             if (!createTransactionHistroy1) {
                 return res.status(400).json({ message: 'invalid request' })
             }
-
-            const emiCollection = db.collection('emidetails');
+console.log(data)
+            const emiCollection = db.collection('selldevice');
             const installmentId = data.installmentId;
             const loanId = data.loan_Id;
             const filter = {
-                loan_Id: loanId,
+                loanId: loanId,
                 "installments.installmentId": installmentId
             };
             console.log('filter',filter)
