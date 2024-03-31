@@ -30,8 +30,8 @@ const login = async (req, res) => {
             role: user.role,
         };
 
-        if (user.shop) {
-            payload.shop = user.shop;
+        if (user.shopName) {
+            payload.shop = user.shopName;
         }
 
         const token = jwt.sign(payload, key, { expiresIn: tokenExpiry });
