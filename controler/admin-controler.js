@@ -23,7 +23,7 @@ const login = async (req, res) => {
             return res.status(400).json({ 'message': 'Invalid mobile number' });
         }
         if (!(user.password === data.password)) {
-            return res.status(400).json({ 'message': 'incorrect creadintails' })
+            return res.status(400).json({ 'message': 'incorret password' })
         }
         const payload = {
             number: number,
