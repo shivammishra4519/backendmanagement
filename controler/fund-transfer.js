@@ -31,8 +31,8 @@ const fundTransferFunction = async (req, res) => {
             try {
                 const db = getDB();
                 const collection = db.collection('wallets');
-                if(data.amount<=0){
-                    return res.status(400).json({error:'invalid amount'})
+                if (data.amount <= 0) {
+                    return res.status(400).json({ error: 'invalid amount' })
                 }
                 const checkAmount = await collection.findOne({ user_id: decodedToken.number });
                 const amount = checkAmount.amount;
@@ -54,7 +54,7 @@ const fundTransferFunction = async (req, res) => {
                 const dbPin = userExit.pin;
                 const pin = parseInt(data.pin);
                 const isPinCorrect = (dbPin == pin);
-               
+
                 if (!isPinCorrect) {
                     return res.status(400).json({ message: 'incoorect Pin' })
                 }
@@ -77,9 +77,11 @@ const fundTransferFunction = async (req, res) => {
                 const senderCloseingAmount = checkAmountAfter.amount;
                 const receverCloseingAmount = checkUserAfter.amount;
 
-             
+
                 const TransactionID = generateTransactionID();
                 const time = getCurrentTime();
+                console.log('timw', getCurrentTime())
+                console.log(time)
                 const date = getCurrentDate();
                 const transferAmount = data.amount;
                 const senderId = decodedToken.number;
@@ -99,7 +101,7 @@ const fundTransferFunction = async (req, res) => {
                     amount: transferAmount,
                     senderId,
                     receverId,
-                    type:'direct'
+                    type: 'direct'
                 }
 
                 const createTransactionHistroy = await transectionHistory.insertOne(transectionInfo);
@@ -180,14 +182,39 @@ function getCurrentDate() {
 
 const transectiondetails = async (req, res) => {
     try {
-        const db = getDB();
-        const collection = db.collection('transectiondetails');
-        
-        // Sorting and limiting the documents
-        const filterData = await collection.find({type:'direct'}).sort({ createdAt: -1 }).limit(100).toArray();
 
-        // Sending the response with the filtered documents
-        res.status(200).json(filterData);
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const db = getDB();
+            const collection = db.collection('transectiondetails');
+
+            const role = decodedToken.role;
+            if (role == 'admin') {
+                const filterData = await collection.find({ type: 'direct' }).sort({ createdAt: -1 }).limit(100).toArray();
+                return res.status(200).json(filterData);
+            }
+            const number = decodedToken.number;
+            const filterData = await collection
+            .find({ type: 'direct', $or: [{ senderId: number }, { receverId: number }] })
+            .toArray();
+        return res.status(200).json(filterData);
+        
+            
+
+        });
+
     } catch (error) {
         // Handling errors
         return res.status(500).json({ error: 'Internal server error' });
@@ -195,4 +222,4 @@ const transectiondetails = async (req, res) => {
 }
 
 
-module.exports = { fundTransferFunction ,transectiondetails}
+module.exports = { fundTransferFunction, transectiondetails }
