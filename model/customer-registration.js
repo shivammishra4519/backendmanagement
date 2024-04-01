@@ -13,7 +13,8 @@ const customerschema = joi.object({
     dob:joi.date().required(),
     address:joi.string().required(),
     otp:joi.any(),
-    otpAdhar:joi.any()
+    otpAdhar:joi.any(),
+    shop:joi.any(),
 });
 
 module.exports = { customerschema }; // Corrected export statement
