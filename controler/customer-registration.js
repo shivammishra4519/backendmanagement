@@ -31,13 +31,29 @@ const customerRegister = async (req, res) => {
             try {
                 const db = getDB();
                 const collection = db.collection('customers');
-                const walletId = await createWallet(data.number);
-                data.walletId = walletId.insertedId;
+
+                const query = {
+                    "$or": [
+                        { "number": data.number },
+                        { "email": data.email },
+                        { "panCardNumber": data.panCardNumber },
+                        { "adharCardNumber": data.adharCardNumber },
+                    ]
+                }
+
+                const isUserExit = await collection.findOne(query);
+                if(isUserExit){
+                    return res.status(400).json({message:'Customer Alreday exit'});
+                }
+
                 data.active = true;
-                data.shop = decodedToken.shop;
+                if (!data.shop) {
+                    data.shop = decodedToken.shop;
+                }
                 delete data.otp;
+                delete data.adharOtp;
                 const result = await collection.insertOne(data);
-                return res.status(200).json({ message: 'Customer registered successfully', result });
+                return res.status(200).json({ message: 'Customer registered successfully' });
             } catch (error) {
                 console.error('Error:', error);
                 return res.status(500).json({ error: 'Internal server error' });

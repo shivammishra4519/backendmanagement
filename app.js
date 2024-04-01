@@ -14,7 +14,8 @@ const sms=require('./route/sms-route')
 const adhar=require('./adhar')
 const details=require('./route/details-route')
 const forgetPassword=require('./route/forget-password-route');
-const brand=require('./route/brand-route')
+const brand=require('./route/brand-route');
+const shop=require('././route/shops-route')
 const cors=require('cors')
 const bodyParser = require('body-parser');
 require('dotenv').config();
@@ -41,6 +42,7 @@ app.use('/adhar',adhar);
 app.use('/forget',forgetPassword);
 app.use('/details',details);
 app.use('/brand',brand);
+app.use('/shops',shop)
 
 
 app.get('/', (req, res) => {
