@@ -15,7 +15,8 @@ const adhar=require('./adhar')
 const details=require('./route/details-route')
 const forgetPassword=require('./route/forget-password-route');
 const brand=require('./route/brand-route');
-const shop=require('././route/shops-route')
+const shop=require('././route/shops-route');
+const city=require('./route/cites')
 const cors=require('cors')
 const bodyParser = require('body-parser');
 require('dotenv').config();
@@ -43,6 +44,7 @@ app.use('/forget',forgetPassword);
 app.use('/details',details);
 app.use('/brand',brand);
 app.use('/shops',shop)
+app.use('/api',city)
 
 
 app.get('/', (req, res) => {
