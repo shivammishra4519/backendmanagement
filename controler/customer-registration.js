@@ -36,7 +36,6 @@ const customerRegister = async (req, res) => {
                     "$or": [
                         { "number": data.number },
                         { "email": data.email },
-                        { "panCardNumber": data.panCardNumber },
                         { "adharCardNumber": data.adharCardNumber },
                     ]
                 }
@@ -135,4 +134,49 @@ const viewAllData = async (req, res) => {
     }
 };
 
-module.exports = { customerRegister, customerList, viewAllData };
+
+const filterCustomer=async(req,res)=>{
+    try{
+
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            try {
+                const data=req.body;
+                console.log("data",data)
+                const db = getDB();
+                const collection = db.collection('customers');
+                const number=data.number;
+                const aadhar=data.adharCardNumber;
+                if(aadhar){
+                    const resultCursor = await collection.findOne({ adharCardNumber: data.adharCardNumber });
+                    return res.status(200).json(resultCursor);
+                }
+                if(number){
+                    const resultCursor = await collection.findOne({ number: number });
+                    return res.status(200).json(resultCursor);
+                }
+                res.status(400).json({message:'invalid request'})
+            } catch (error) {
+                console.error('Error:', error);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+        });
+    }catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+module.exports = { customerRegister, customerList, viewAllData ,filterCustomer};

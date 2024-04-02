@@ -18,6 +18,7 @@ const brand=require('./route/brand-route');
 const shop=require('././route/shops-route');
 const city=require('./route/cites')
 const cors=require('cors')
+const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
@@ -45,6 +46,7 @@ app.use('/details',details);
 app.use('/brand',brand);
 app.use('/shops',shop)
 app.use('/api',city)
+app.use('/api', paytm);
 
 
 app.get('/', (req, res) => {

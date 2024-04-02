@@ -188,7 +188,6 @@ const viewEmployees = async (req, res) => {
             const role = decodedToken.role;
             if (role == 'admin') {
                 const result = await collection.find({ role: 'employee' }).toArray();
-                console.log('Employees:', result);
                 const total = result.length;
                 return res.status(200).json({ totalEmployees: total });
             } else {

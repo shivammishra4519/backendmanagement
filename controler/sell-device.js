@@ -400,6 +400,37 @@ const filterData = async (req, res) => {
     }
 }
 
+const checkStatus = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            }
+
+            const data=req.body;
+            const db=getDB();
+            const collection=db.collection('selldevice');
+            const result=await collection.find({number:data.number}).toArray();
+            if(result){
+                return res.status(200).josn(result)
+            }
+            res.status(400).josn({message:'somtheing went wriong'})
+        });
+
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+}
 
 
 
