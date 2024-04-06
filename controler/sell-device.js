@@ -35,16 +35,25 @@ const sellDevice = async (req, res) => {
 
             const db = getDB();
             const collection = db.collection('selldevice');
-            const result = await collection.findOne({ imei1: data.imei1 });
+            const query = {
+                "$or": [
+                    { imei1: data.imei1 },
+                    { imei2: data.imei2 },
+                ]
+            }
+            const result = await collection.findOne(query);
+
             if (result) {
                 return res.status(400).json({ message: 'Device already sold' });
             }
 
+            // checking user 
             const number = data.customerNumber;
             const iSCustomerExit = await db.collection('customers').findOne({ number: parseInt(number) });
             if (!iSCustomerExit) {
                 return res.status(400).json({ message: 'invalid request1' })
             }
+
             const totalInstallments = parseInt(data.emi); // Total number of installments
             const installmentAmount = data.emiAmount;
             const installments = generateInstallments(totalInstallments, installmentAmount);
@@ -55,7 +64,22 @@ const sellDevice = async (req, res) => {
             data.time = getCurrentTime();
 
 
-            // first transection admin to customer   
+            // first transection admin to customer 
+            const loanWallet=db.collection('loanwallets');
+            const objwallet={
+                loanId:loanId,
+                credit:data.financeAmount
+            }  
+
+            const check=await loanWallet.findOne({loanId:loanId});
+            if(check){
+                return res.status(400).josn({error:'somtheing went wrong loanId'});
+            }
+            const insertIdWallet=await loanWallet.insertOne(objwallet);
+            if(!insertIdWallet){
+                return res.status(400).json({error:'database error'})
+            };
+            
             const wallet = db.collection('wallets');
             const transectionHistory = db.collection('transectiondetails');
             // transection of remaning amount of shopkeeper from admin  
@@ -126,40 +150,10 @@ const sellDevice = async (req, res) => {
                 loanId: loanId
             }
 
-            const filterCustomer = { user_id: parseInt(number) };
-            const customerWallet = await wallet.findOne(filterCustomer);
-            if (!customerWallet) {
-                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
-                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
-                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
-                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
-                return res.status(400).json({ error: 'somtheing went wrong' });
-            }
-            const updateCustomer = { $inc: { credit: data.financeAmount } };
-            const resultCustomer = await wallet.findOneAndUpdate(filterCustomer, updateCustomer, { returnOriginal: true });
-
-            if (!resultCustomer) {
-                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
-                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
-                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
-                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
-                return res.status(400).json({ error: 'somtheing went wrong' });
-            }
-            const customerWalletA = await wallet.findOne(filterCustomer);
-
-            if (!customerWalletA) {
-                const update1Shop = { $inc: { amount: - amountCreaditToShop } };
-                await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
-                const updateAdmin = { $inc: { amount: amountCreaditToShop } };
-                await wallet.findOneAndUpdate(filterAdmin, updateAdmin, { returnOriginal: false });
-                return res.status(400).json({ error: 'somtheing went wrong' });
-            }
             const tid1 = generateTransactionID();
 
             const loanHistory = {
                 customerId: parseInt(number),
-                opening: customerWallet.credit,
-                closing: customerWalletA.credit,
                 loanId: loanId,
                 type: 'loan',
                 LoanAmount: amountCreaditToShop,

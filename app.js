@@ -16,7 +16,8 @@ const details=require('./route/details-route')
 const forgetPassword=require('./route/forget-password-route');
 const brand=require('./route/brand-route');
 const shop=require('././route/shops-route');
-const city=require('./route/cites')
+const city=require('./route/cites');
+const guarantor=require('./route/guarantor-route')
 const cors=require('cors')
 const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
@@ -47,6 +48,7 @@ app.use('/brand',brand);
 app.use('/shops',shop)
 app.use('/api',city)
 app.use('/api', paytm);
+app.use('/guarantor', guarantor);
 
 
 app.get('/', (req, res) => {

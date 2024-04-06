@@ -179,4 +179,43 @@ const filterCustomer=async(req,res)=>{
     }
 }
 
-module.exports = { customerRegister, customerList, viewAllData ,filterCustomer};
+
+const verifyCustomer = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const data = req.body;
+            const number = data.number;
+            if (!number) {
+                return res.status(400).json({ message: 'Something went wrong' });
+            }
+            const db = getDB();
+            const collection = db.collection('customers');
+            const customerData = await collection.findOne({ number: number });
+
+            if (!customerData) {
+                return res.status(404).json({ message: 'Customer not found' });
+            }
+            res.status(200).json(customerData);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+
+module.exports = { customerRegister, customerList, viewAllData ,filterCustomer,verifyCustomer};
