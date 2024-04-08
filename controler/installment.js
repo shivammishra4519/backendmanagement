@@ -16,15 +16,20 @@ const viewEmidetailsByNumber = async (req, res) => {
         const db = getDB()
         const collection = db.collection('selldevice');
         const number = data.number;
-        const strNumber = number.toString()
-        const result = await collection.findOne({ customerNumber: strNumber });
+       const customerNumber=data.customerNumber;
+       let result
+       if(number){
+         result = await collection.findOne({ customerNumber: number });
+       }
+        if(customerNumber){
+            result = await collection.findOne({ customerNumber: customerNumber });
+        }
 
         if (!result) {
             return res.status(400).json({ message: 'invalid user id' })
         }
 
         res.status(200).json(result)
-
 
 
     } catch (error) {
@@ -52,13 +57,16 @@ const payInstallment = async (req, res) => {
             const wallet = db.collection('wallets');
             const collection = db.collection('users');
             const emiCollection = db.collection('selldevice');
+            const loanWallet=db.collection('loanwallets');
 
             const balanceCheck = await wallet.findOne({ user_id: employeId });
             if (!balanceCheck)
                 return res.status(400).json({ message: 'Something went wrong with employer balance check' });
 
-            if (balanceCheck.amount < data.amount)
+            if (balanceCheck.amount < data.amount){
                 return res.status(400).json({ message: 'Insufficient balance' });
+
+            }
 
             const result = await collection.findOne({ number: employeId });
             const dbPin = result.pin;
@@ -67,7 +75,8 @@ const payInstallment = async (req, res) => {
             if (!isPinMatched)
                 return res.status(400).json({ message: 'Incorrect PIN' });
 
-            const customerCheck = await wallet.findOne({ user_id: parseInt(data.user_id) });
+            const customerCheck = await loanWallet.findOne({ loanId: data.loan_Id });
+
             if (!customerCheck)
                 return res.status(400).json({ message: 'Something went wrong with customer check' });
 
@@ -94,13 +103,13 @@ const payInstallment = async (req, res) => {
             const receiverOpeningAmount = customerCheck.credit;
 
             const senderFilter = { user_id: employeId };
-            const receiverFilter = { user_id: parseInt(data.user_id) };
+            const receiverFilter = { loanId: data.loan_Id };
 
             const updateSender = { $inc: { amount: -data.amount } };
             const updateReceiver = { $inc: { credit: -data.amount } };
 
             const result1 = await wallet.findOneAndUpdate(senderFilter, updateSender, { returnOriginal: true });
-            const result2 = await wallet.findOneAndUpdate(receiverFilter, updateReceiver, { returnOriginal: true });
+            const result2 = await loanWallet.findOneAndUpdate(receiverFilter, updateReceiver, { returnOriginal: true });
 
             const senderClosingAmount = result1.amount;
             const receiverClosingAmount = result2.credit;
@@ -117,7 +126,7 @@ const payInstallment = async (req, res) => {
                 amount: data.amount,
                 senderId: decodedToken.number,
                 receiverId: parseInt(data.user_id),
-                type: 'direct'
+                type: 'emiPaid'
             };
 
             const createTransactionHistory = await transectionHistory.insertOne(transectionInfo);
@@ -174,7 +183,7 @@ const payInstallment = async (req, res) => {
                 amount: data.amount,
                 senderId: parseInt(data.user_id),
                 receiverId: adminId,
-                type: 'emi paid'
+                type: 'emiPaid'
             };
 
             const createAdminTransaction = await transectionHistory.insertOne(adminTransactionInfo);
@@ -193,11 +202,35 @@ const payInstallment = async (req, res) => {
 
 const viewPaidEmi = async (req, res) => {
     try {
+
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader)
+            return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
+
+        const token = authHeader.split(' ')[1];
+        if (!token)
+            return res.status(401).json({ message: 'Unauthorized: Token missing' });
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err)
+                return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            const number=decodedToken.number;
         const db = getDB();
-        console.log('paid emi')
-        const collection = db.collection('paidemi');
-        const result = await collection.find().toArray();
+        const collection = db.collection('transectiondetails');
+        const query = {
+            type: ['emiPaid', 'emi paid'], // Array containing multiple values for the 'type' key
+            $or: [
+              { senderId: number },
+            
+            ]
+          };
+          
+          
+        const result = await collection.find(query).toArray();
         res.status(200).json(result);
+
+        });
     } catch (error) {
         res.status(400).json(error)
     }

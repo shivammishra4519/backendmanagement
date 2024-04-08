@@ -40,7 +40,7 @@ const registerGuarantor = async (req, res) => {
             }
             const isAlreadyPresent = await collection.findOne({ number: data.number });
             if (isAlreadyPresent) {
-                return res.status(400).json({ error: 'Guarantor is already exit' })
+                return res.status(200).json({isAlreadyPresent})
             }
 
             const insertId = await collection.insertOne(data);

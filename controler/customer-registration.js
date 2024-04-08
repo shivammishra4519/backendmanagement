@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { customerschema } = require('../model/customer-registration');
+const {getCurrentDate}=require('./functions')
 const { getDB } = require('../dbconnection');
 const { createWallet } = require('../controler/wallet');
 require('dotenv').config();
@@ -51,7 +52,10 @@ const customerRegister = async (req, res) => {
                 }
                 delete data.otp;
                 delete data.adharOtp;
+                const date=getCurrentDate();
+                data.registerDate=date;
                 const result = await collection.insertOne(data);
+              
                 return res.status(200).json({ message: 'Customer registered successfully' });
             } catch (error) {
                 console.error('Error:', error);
@@ -217,5 +221,44 @@ const verifyCustomer = async (req, res) => {
 }
 
 
+const isCustomerPresent=async (req,res)=>{
+    try{
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
 
-module.exports = { customerRegister, customerList, viewAllData ,filterCustomer,verifyCustomer};
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+        const db = getDB();
+        const collection = db.collection('customers');
+const data=req.body;
+        const query = {
+            "$or": [
+                { "number": data.number },
+                { "email": data.email },
+                { "adharCardNumber": data.adharCardNumber },
+            ]
+        }
+
+        const isUserExit = await collection.findOne(query);
+        if(isUserExit){
+            return res.status(200).json({status:1,message:'Customer Alreday exit'});
+        }
+        res.status(200).json({status:0,message:'Customer Not exit'})
+    });
+    }catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+module.exports = { customerRegister, customerList, viewAllData ,filterCustomer,verifyCustomer,isCustomerPresent};

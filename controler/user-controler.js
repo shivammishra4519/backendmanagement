@@ -1,6 +1,7 @@
 const { userModel } = require('../model/user-model');
 const { getDB } = require('../dbconnection');
 const { createWallet } = require('./wallet');
+const { getCurrentDate } = require('./functions')
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -12,24 +13,30 @@ const registerUser = async (req, res) => {
         const data = req.body;
         const validationError = userModel.validate(data);
         if (validationError.error) {
-            res.status(400).json(validationError.error)
+            return res.status(400).json(validationError.error)
         }
-        else {
-            const db = getDB();
-            const collection = db.collection('users');
-            const result = await collection.findOne({ number: data.number });
-            if (result) {
-                res.status(400).json({ message: 'user already exit' })
-            }
-            else {
-                data.role = 'user';
-                data.active = true;
-                const walletId = await createWallet(data.number);
-                data.walletId = walletId.insertedId;
-                const response = await collection.insertOne(data);
-                res.status(200).json(response);
-            }
+
+        const db = getDB();
+        const collection = db.collection('users');
+        const result = await collection.findOne({
+            $or: [
+                { number: data.number },
+                { email: data.email }
+            ]
+        });
+        if (result) {
+            return res.status(400).json({ message: 'user already exit' })
         }
+
+        data.role = 'user';
+        data.active = true;
+        const walletId = await createWallet(data.number);
+        data.walletId = walletId.insertedId;
+        data.registerDate = getCurrentDate();
+        const response = await collection.insertOne(data);
+        res.status(200).json(response);
+
+
 
     } catch (error) {
         res.status(400).json(error)
@@ -46,7 +53,7 @@ const getUser = async (req, res) => {
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
-        
+
 
         const token = authHeader.split(' ')[1];
         console.log(token)
@@ -86,7 +93,7 @@ const getUserList = async (req, res) => {
         const db = getDB();
         const collection = db.collection('users');
         const userList = await collection.find(
-            {},  // No specific filter applied in this example
+            { role: 'user' },  // Filter to include only documents with role 'user'
             {
                 name: 1,
                 email: 1,
@@ -96,6 +103,7 @@ const getUserList = async (req, res) => {
                 _id: 0
             }
         ).toArray();
+        
 
         res.status(200).json(userList);
 
