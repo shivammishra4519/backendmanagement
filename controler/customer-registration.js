@@ -249,6 +249,7 @@ const data=req.body;
         }
 
         const isUserExit = await collection.findOne(query);
+        console.log(isUserExit)
         if(isUserExit){
             return res.status(200).json({status:1,message:'Customer Alreday exit'});
         }

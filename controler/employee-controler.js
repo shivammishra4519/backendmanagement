@@ -44,4 +44,29 @@ const employeeRegister = async (req, res) => {
     }
 }
 
-module.exports = { employeeRegister }
+const getEmployeeList = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('users');
+       
+        const userList = await collection.find(
+            { role: 'employee' },  // Filter to include only documents with role 'user'
+            {
+                name: 1,
+                email: 1,
+                active: 1,
+                role: 1,
+                number: 1,
+                _id: 0
+            }
+        ).toArray();
+
+     
+        res.status(200).json(userList);
+
+    } catch (error) {
+        res.status(400).json(error);
+    }
+}
+
+module.exports = { employeeRegister , getEmployeeList}

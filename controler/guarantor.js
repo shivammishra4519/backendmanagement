@@ -40,7 +40,7 @@ const registerGuarantor = async (req, res) => {
             }
             const isAlreadyPresent = await collection.findOne({ number: data.number });
             if (isAlreadyPresent) {
-                return res.status(200).json({isAlreadyPresent})
+                return res.status(200).json({ isAlreadyPresent })
             }
 
             const insertId = await collection.insertOne(data);
@@ -56,13 +56,57 @@ const registerGuarantor = async (req, res) => {
     }
 }
 
+const checkGurantor = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+console.log(2)
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(400).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const data = req.body;
+         
+            const db = getDB();
+            const collection = db.collection('guarantor');
+            const result = await collection.findOne({
+                $or: [
+                    { number: data.number },
+                    { aadharNumber: data.aadharNumber } // Fixed field name to match the data object
+                ]
+            });
+ 
+            
+
+            if(result){
+                return res.status(200).json({status:1,message:'user already exit'})
+            }
+            return res.status(200).json({status:0,message:'user  not exit'})
+
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 
 const guarantorSchema = joi.object({
     name: joi.string().required(),
     number: joi.number().required(),
-    adharNumber: joi.number().required(),
+    aadharNumber: joi.number().required(),
     address: joi.string().required(),
+    images:joi.any(),
+    fatherName:joi.string().required()
 });
 
 
-module.exports = { registerGuarantor }
+module.exports = { registerGuarantor,checkGurantor }

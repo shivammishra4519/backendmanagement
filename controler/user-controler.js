@@ -49,14 +49,14 @@ const getUser = async (req, res) => {
 
 
         const authHeader = req.headers['authorization'];
-        console.log(authHeader)
+
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
 
 
         const token = authHeader.split(' ')[1];
-        console.log(token)
+
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized: Token missing' });
         }
@@ -65,7 +65,7 @@ const getUser = async (req, res) => {
             if (err) {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
-            console.log(2)
+
             const number = decodedToken.number;
             const db = getDB();
             const collection = db.collection('users');
@@ -103,7 +103,7 @@ const getUserList = async (req, res) => {
                 _id: 0
             }
         ).toArray();
-        
+
 
         res.status(200).json(userList);
 
@@ -111,4 +111,87 @@ const getUserList = async (req, res) => {
         res.status(400).json(error);
     }
 }
-module.exports = { registerUser, getUser, getUserList };
+
+const updateStatus = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+
+        const token = authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const role = decodedToken.role;
+            if (role !== 'admin') {
+                return res.status(400).json({ error: 'unauthorized user' })
+            }
+            const db = getDB()
+            const collection = db.collection('users')
+            const data = req.body;
+            if (!data) {
+                return res.status(400).json({ message: 'Data not found' })
+            }
+
+            const isUpdated = await collection.updateOne(
+                { "number": data.number }, // Filter criteria
+                { $set: { "active": !data.active } } // Update operation, setting active to false
+            );
+
+            res.status(200).json({ message: 'updated' })
+        });
+
+    } catch (error) {
+        res.status(400).json(error);
+    }
+}
+
+
+const walletCheckUser = async (req, res) => {
+    try {
+       
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+
+        const token = authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const role = decodedToken.role;
+           
+            if (role !== 'admin') {
+                return res.status(400).json({ message: 'Unauthorized: user' })
+            }
+            const data = req.body;
+            const db = getDB();
+            const collection = db.collection('wallets');
+           
+            const amount = await collection.findOne({ user_id: data.number });
+            
+            if(!amount){
+                return res.status(400).json({message:'user not exit'})
+            }
+            res.status(200).json(amount);
+        });
+    } catch (error) {
+        res.status(400).json(error);
+    }
+}
+module.exports = { registerUser, getUser, getUserList, updateStatus ,walletCheckUser};
