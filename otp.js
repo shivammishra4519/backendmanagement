@@ -121,7 +121,7 @@ router.post('/send-otp', async (req, res) => {
 router.post('/verify-otp', async (req, res) => {
   try {
     const { otp, number } = req.body;
-    console.log(req.body)
+ 
     const db = getDB();
     const collection = db.collection('otp');
     const result = await collection.findOne({ number: number });

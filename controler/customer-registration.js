@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { customerschema } = require('../model/customer-registration');
-const {getCurrentDate}=require('./functions')
+const { getCurrentDate } = require('./functions')
 const { getDB } = require('../dbconnection');
 const { createWallet } = require('../controler/wallet');
 require('dotenv').config();
@@ -42,8 +42,8 @@ const customerRegister = async (req, res) => {
                 }
 
                 const isUserExit = await collection.findOne(query);
-                if(isUserExit){
-                    return res.status(400).json({message:'Customer Alreday exit'});
+                if (isUserExit) {
+                    return res.status(400).json({ message: 'Customer Alreday exit' });
                 }
 
                 data.active = true;
@@ -52,10 +52,10 @@ const customerRegister = async (req, res) => {
                 }
                 delete data.otp;
                 delete data.adharOtp;
-                const date=getCurrentDate();
-                data.registerDate=date;
+                const date = getCurrentDate();
+                data.registerDate = date;
                 const result = await collection.insertOne(data);
-              
+
                 return res.status(200).json({ message: 'Customer registered successfully' });
             } catch (error) {
                 console.error('Error:', error);
@@ -139,8 +139,8 @@ const viewAllData = async (req, res) => {
 };
 
 
-const filterCustomer=async(req,res)=>{
-    try{
+const filterCustomer = async (req, res) => {
+    try {
 
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -157,27 +157,27 @@ const filterCustomer=async(req,res)=>{
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
             try {
-                const data=req.body;
-                console.log("data",data)
+                const data = req.body;
+                console.log("data", data)
                 const db = getDB();
                 const collection = db.collection('customers');
-                const number=data.number;
-                const aadhar=data.adharCardNumber;
-                if(aadhar){
+                const number = data.number;
+                const aadhar = data.adharCardNumber;
+                if (aadhar) {
                     const resultCursor = await collection.findOne({ adharCardNumber: data.adharCardNumber });
                     return res.status(200).json(resultCursor);
                 }
-                if(number){
+                if (number) {
                     const resultCursor = await collection.findOne({ number: number });
                     return res.status(200).json(resultCursor);
                 }
-                res.status(400).json({message:'invalid request'})
+                res.status(400).json({ message: 'invalid request' })
             } catch (error) {
                 console.error('Error:', error);
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
-    }catch (error) {
+    } catch (error) {
         console.error('Error:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
@@ -221,8 +221,8 @@ const verifyCustomer = async (req, res) => {
 }
 
 
-const isCustomerPresent=async (req,res)=>{
-    try{
+const isCustomerPresent = async (req, res) => {
+    try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
@@ -237,29 +237,50 @@ const isCustomerPresent=async (req,res)=>{
             if (err) {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
-        const db = getDB();
-        const collection = db.collection('customers');
-const data=req.body;
-        const query = {
-            "$or": [
-                { "number": data.number },
-                { "email": data.email },
-                { "adharCardNumber": data.adharCardNumber },
-            ]
-        }
+            const db = getDB();
+            const collection = db.collection('customers');
+            const data = req.body;
+            const query = {
+                "$or": [
+                    { "number": data.number },
+                    { "email": data.email },
+                    { "adharCardNumber": data.adharCardNumber },
+                ]
+            }
 
-        const isUserExit = await collection.findOne(query);
-        console.log(isUserExit)
-        if(isUserExit){
-            return res.status(200).json({status:1,message:'Customer Alreday exit'});
+            const isUserExit = await collection.findOne(query);
+            console.log(isUserExit)
+            if (isUserExit) {
+                return res.status(200).json({ status: 1, message: 'Customer Alreday exit' });
+            }
+            res.status(200).json({ status: 0, message: 'Customer Not exit' })
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const viewCustomerImageName = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection=db.collection('customers');
+       
+        const data=req.body;
+        if(!data){
+            return res.status(400).json({message:'data not found'})
         }
-        res.status(200).json({status:0,message:'Customer Not exit'})
-    });
-    }catch (error) {
+        const result=await collection.findOne({number:data.number});
+        if(result){
+            const images=result.images;
+            return res.status(200).json(result)
+        }
+        res.status(400).json({message:'data not found'})
+    } catch (error) {
         console.error('Error:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
 
-module.exports = { customerRegister, customerList, viewAllData ,filterCustomer,verifyCustomer,isCustomerPresent};
+module.exports = { customerRegister, customerList, viewAllData, filterCustomer, verifyCustomer, isCustomerPresent,viewCustomerImageName };

@@ -76,7 +76,7 @@ const deviceData = async (req, res) => {
 const viewAllDevice = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
-      
+
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
@@ -105,8 +105,23 @@ const viewAllDevice = async (req, res) => {
 
 
 
+const viewDeviceByCustomerId = async (req, res) => {
+    try {
+        const data = req.body;
+        const db=getDB();
+      
+        const collection=db.collection('selldevice');
+        const result=await collection.findOne({customerNumber:parseInt(data.number)});
+        if(result){
+           return res.status(200).json(result);
+        }
+        res.status(400).json({message:'data not found'})
+
+    } catch (error) {
+        return res.status(400).json(error); // Return any error as JSON
+    }
+}
 
 
 
-
-module.exports = { addDevice, brandNames, deviceData, viewAllDevice};
+module.exports = { addDevice, brandNames, deviceData, viewAllDevice,viewDeviceByCustomerId };

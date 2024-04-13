@@ -78,16 +78,17 @@ router.post('/upload', upload.fields([
 router.post('/images/', async (req, res) => {
     try {
         const imageName = req.body.fileName;
-        const imagePath = path.join(__dirname, 'uploads', imageName);
         
+        const imagePath = path.join(__dirname, 'uploads', imageName);
+      
         // Check if the image file exists
         if (fs.existsSync(imagePath)) {
             // Set appropriate content-type header
-            res.setHeader('Content-Type', 'image/png'); // Adjust content type based on your image type
-            // Send the image file as a response
+            res.setHeader('Content-Type', 'image/png'); 
+          console.log("img",imagePath)
             res.sendFile(imagePath);
         } else {
-            // If the image file does not exist, return a 404 Not Found error
+            
             res.status(404).json({ message: 'Image not found' });
         }
     } catch (error) {

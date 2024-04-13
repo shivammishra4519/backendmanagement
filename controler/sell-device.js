@@ -374,7 +374,7 @@ const filterData = async (req, res) => {
         const { fromDate, toDate } = req.body; // Assuming fromDate and toDate are provided in the request body
         const db = getDB();
         const collection = db.collection('selldevice');
-        console.log(fromDate, toDate);
+       
 
         // Construct the query
         const query = {
