@@ -1,6 +1,6 @@
 const { getDB } = require('../dbconnection');
 const jwt = require('jsonwebtoken');
-const {  generateTransactionID, createTransactionHistroy } = require('../controler/sell-device')
+const { generateTransactionID, createTransactionHistroy } = require('../controler/sell-device')
 // const bcrypt = require('bcrypt');
 require('dotenv').config();
 const key = process.env.secretkey;
@@ -16,12 +16,12 @@ const viewEmidetailsByNumber = async (req, res) => {
         const db = getDB()
         const collection = db.collection('selldevice');
         const number = data.number;
-       const customerNumber=data.customerNumber;
-       let result
-       if(number){
-         result = await collection.findOne({ customerNumber: number });
-       }
-        if(customerNumber){
+        const customerNumber = data.customerNumber;
+        let result
+        if (number) {
+            result = await collection.findOne({ customerNumber: number });
+        }
+        if (customerNumber) {
             result = await collection.findOne({ customerNumber: customerNumber });
         }
 
@@ -57,13 +57,13 @@ const payInstallment = async (req, res) => {
             const wallet = db.collection('wallets');
             const collection = db.collection('users');
             const emiCollection = db.collection('selldevice');
-            const loanWallet=db.collection('loanwallets');
+            const loanWallet = db.collection('loanwallets');
 
             const balanceCheck = await wallet.findOne({ user_id: employeId });
             if (!balanceCheck)
                 return res.status(400).json({ message: 'Something went wrong with employer balance check' });
 
-            if (balanceCheck.amount < data.amount){
+            if (balanceCheck.amount < data.amount) {
                 return res.status(400).json({ message: 'Insufficient balance' });
 
             }
@@ -134,7 +134,7 @@ const payInstallment = async (req, res) => {
                 return res.status(400).json({ message: 'Failed to record transaction history' });
 
             // Update EMI installment status
-            const payDate=getCurrentDate();
+            const payDate = getCurrentDate();
             console.log(payDate);
             const update = {
                 $set: {
@@ -215,20 +215,20 @@ const viewPaidEmi = async (req, res) => {
         jwt.verify(token, key, async (err, decodedToken) => {
             if (err)
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-            const number=decodedToken.number;
-        const db = getDB();
-        const collection = db.collection('transectiondetails');
-        const query = {
-            type: ['emiPaid', 'emi paid'], // Array containing multiple values for the 'type' key
-            $or: [
-              { senderId: number },
-            
-            ]
-          };
-          
-          
-        const result = await collection.find(query).toArray();
-        res.status(200).json(result);
+            const number = decodedToken.number;
+            const db = getDB();
+            const collection = db.collection('transectiondetails');
+            const query = {
+                type: ['emiPaid', 'emi paid'], // Array containing multiple values for the 'type' key
+                $or: [
+                    { senderId: number },
+
+                ]
+            };
+
+
+            const result = await collection.find(query).toArray();
+            res.status(200).json(result);
 
         });
     } catch (error) {
@@ -236,6 +236,31 @@ const viewPaidEmi = async (req, res) => {
     }
 }
 
+
+const findInstallmentByloanId = async (req, res) => {
+    const db = getDB();
+    const collection = db.collection('selldevice');
+    const data = req.body;
+    if (!data || !data.loanId) {
+        return res.status(400).json({ message: 'Loan ID not provided' });
+    }
+    try {
+        const result = await collection.findOne({ loanId: data.loanId });
+        if (!result) {
+            return res.status(404).json({ message: 'Loan not found' });
+        }
+        const installment = result.installments.find(installment => installment.installmentId === data.emiId);
+        if (!installment) {
+            return res.status(404).json({ message: 'Installment not found' });
+        }
+       
+        // Do something with the installment data
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 
 
@@ -261,7 +286,7 @@ function getCurrentDate() {
     return `${day}-${month}-${year}`;
 }
 
-module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi }
+module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi,findInstallmentByloanId }
 
 
 

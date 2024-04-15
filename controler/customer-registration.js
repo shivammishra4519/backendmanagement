@@ -273,7 +273,7 @@ const viewCustomerImageName = async (req, res) => {
         const result=await collection.findOne({number:data.number});
         if(result){
             const images=result.images;
-            return res.status(200).json(result)
+            return res.status(200).json(images)
         }
         res.status(400).json({message:'data not found'})
     } catch (error) {

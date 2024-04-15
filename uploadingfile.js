@@ -78,17 +78,19 @@ router.post('/upload', upload.fields([
 router.post('/images/', async (req, res) => {
     try {
         const imageName = req.body.fileName;
-        
+        // Check if fileName is provided
+        if (!imageName) {
+            return res.status(400).json({ message: 'Image name not provided' });
+        }
+
         const imagePath = path.join(__dirname, 'uploads', imageName);
       
         // Check if the image file exists
         if (fs.existsSync(imagePath)) {
             // Set appropriate content-type header
             res.setHeader('Content-Type', 'image/png'); 
-          console.log("img",imagePath)
             res.sendFile(imagePath);
         } else {
-            
             res.status(404).json({ message: 'Image not found' });
         }
     } catch (error) {
@@ -96,6 +98,7 @@ router.post('/images/', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
 
 
 module.exports = router;

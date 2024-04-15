@@ -18,21 +18,19 @@ const brand=require('./route/brand-route');
 const shop=require('././route/shops-route');
 const city=require('./route/cites');
 const guarantor=require('./route/guarantor-route');
-const contactus=require('./route/contactus-route')
-const cors=require('cors')
+const contactus=require('./route/contactus-route');
+const pdf=require('./route/pdf-route')
+const cors=require('cors');
 const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
 require('dotenv').config();
-
 connectToDB();
-
 const port = process.env.PORT || 4000;
 const app = express();
 app.use(cors())
 app.use(bodyParser.json({ extended: true }));
-// Use the customer route
-app.use('/customer', customerRoute); // Use '/customer' instead of 'customer'
-app.use('/api', adminRoute); // Use '/customer' instead of 'customer'
+app.use('/customer', customerRoute);
+app.use('/api', adminRoute); 
 app.use('/api',image);
 app.use('/api',user);
 app.use('/api',device);
@@ -51,6 +49,7 @@ app.use('/api',city)
 app.use('/api', paytm);
 app.use('/guarantor', guarantor);
 app.use('/conactus',contactus)
+app.use('/pdf',pdf)
 
 
 app.get('/', (req, res) => {
