@@ -23,7 +23,7 @@ const downLoadTermsConditon = async (req, res) => {
 
         try {
             // Navigate to the webpage
-            await page.goto(`http://localhost:4200/terms-condtiton/${number}`, { waitUntil: 'networkidle2' });
+            await page.goto(`http://62.72.56.135:4200//terms-condtiton/${number}`, { waitUntil: 'networkidle2' });
 
             // Set up the PDF options
             const pdfOptions = {
@@ -84,7 +84,7 @@ const downLoadInstallmentSlip = async (req, res) => {
     
             try {
                 // Navigate to the webpage
-                await page.goto(`http://localhost:4200/installment-slip/loanid=${data.loanId}&emiid=${data.emiId}`, { waitUntil: 'networkidle2' });
+                await page.goto(`http://62.72.56.135:4200/installment-slip/loanid=${data.loanId}&emiid=${data.emiId}`, { waitUntil: 'networkidle2' });
     
                 // Set up the PDF options
                 const pdfOptions = {
