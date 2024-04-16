@@ -192,7 +192,8 @@ const downLoadInstallmentSlip = async (req, res) => {
             }
 
             const browser = await puppeteer.launch({
-                executablePath: '/usr/bin/chromium-browser',// Update with the correct path to Chrome on your VPS
+                // executablePath: '/usr/bin/chromium-browser',
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],// Update with the correct path to Chrome on your VPS
             });
     
             const page = await browser.newPage();
