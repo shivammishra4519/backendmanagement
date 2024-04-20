@@ -5,6 +5,8 @@ const userModel=joi.object({
     email:joi.string().required(),
     number:joi.number().required(),
     shopName:joi.string().required(),
+    state:joi.string().required(),
+    district:joi.string().required(),
     pin:joi.string().required(),
     password:joi.string().required(),
     confirmPassword:joi.string().required(),

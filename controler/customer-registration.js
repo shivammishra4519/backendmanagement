@@ -3,6 +3,7 @@ const { customerschema } = require('../model/customer-registration');
 const { getCurrentDate } = require('./functions')
 const { getDB } = require('../dbconnection');
 const { createWallet } = require('../controler/wallet');
+const { number } = require('joi');
 require('dotenv').config();
 
 const key = process.env.secretkey;
@@ -49,6 +50,11 @@ const customerRegister = async (req, res) => {
                 data.active = true;
                 if (!data.shop) {
                     data.shop = decodedToken.shop;
+                    data.registerId=decodedToken.number;
+                }
+                const role=decodedToken.role;
+                if(role== 'admin' || role == 'employee'){
+                    data.registerId=decodedToken.number
                 }
                 delete data.otp;
                 delete data.adharOtp;
