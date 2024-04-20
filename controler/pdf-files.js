@@ -149,6 +149,8 @@ const downLoadTermsConditon = async (req, res) => {
         const page = await browser.newPage();
 
         try {
+
+            
             await page.goto(`${url}/terms-condtiton?order=${number}`, { waitUntil: 'networkidle2' });
 
             const pdfOptions = {
@@ -156,6 +158,7 @@ const downLoadTermsConditon = async (req, res) => {
                 printBackground: true,
             };
 
+            await page.addStyleTag({ content: 'body { font-family: "Noto Sans Devanagari", sans-serif; }' });
             const pdfBuffer = await page.pdf(pdfOptions);
 
             res.setHeader('Content-Disposition', 'attachment; filename="terms_condition.pdf"');
@@ -210,7 +213,7 @@ const downLoadInstallmentSlip = async (req, res) => {
                     format: 'A4',
                     printBackground: true,
                 };
-    
+                await page.addStyleTag({ content: 'body { font-family: "Noto Sans Devanagari", sans-serif; }' });
                 const pdfBuffer = await page.pdf(pdfOptions);
     
                 res.setHeader('Content-Disposition', 'attachment; filename="terms_condition.pdf"');
