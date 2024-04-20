@@ -109,7 +109,6 @@ const viewDeviceByCustomerId = async (req, res) => {
     try {
         const data = req.body;
         const db=getDB();
-      
         const collection=db.collection('selldevice');
         const result=await collection.findOne({customerNumber:parseInt(data.number)});
         if(result){

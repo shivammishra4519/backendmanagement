@@ -2,7 +2,7 @@
 // const path = require('path'); const jwt = require('jsonwebtoken');
 // const {getDB}=require('../dbconnection')
 // require('dotenv').config();
-
+// const url = process.env.frontEnd;
 // const key = process.env.secretkey;
 // const tokenExpiry = '12h'; // Token expiry set to 12 hours
 
@@ -23,7 +23,7 @@
 
 //         try {
 //             // Navigate to the webpage
-//             await page.goto(`http://62.72.56.135:4200//terms-condtiton/${number}`, { waitUntil: 'networkidle2' });
+//             await page.goto(`${url}/terms-condtiton?order=${number}`, { waitUntil: 'networkidle2' });
 
 //             // Set up the PDF options
 //             const pdfOptions = {
@@ -131,6 +131,8 @@
 const puppeteer = require('puppeteer-core');
 const { getDB } = require('../dbconnection');
 require('dotenv').config();
+const url = process.env.frontEnd;
+
 
 const downLoadTermsConditon = async (req, res) => {
     try {
@@ -147,7 +149,7 @@ const downLoadTermsConditon = async (req, res) => {
         const page = await browser.newPage();
 
         try {
-            await page.goto(`http://62.72.56.135:4200//terms-condtiton/${number}`, { waitUntil: 'networkidle2' });
+            await page.goto(`${url}/terms-condtiton?order=${number}`, { waitUntil: 'networkidle2' });
 
             const pdfOptions = {
                 format: 'A4',
