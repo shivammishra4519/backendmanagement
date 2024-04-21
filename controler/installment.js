@@ -241,6 +241,7 @@ const findInstallmentByloanId = async (req, res) => {
     const db = getDB();
     const collection = db.collection('selldevice');
     const data = req.body;
+  
     if (!data || !data.loanId) {
         return res.status(400).json({ message: 'Loan ID not provided' });
     }
@@ -257,7 +258,7 @@ const findInstallmentByloanId = async (req, res) => {
         // Do something with the installment data
         res.status(200).json(result);
     } catch (error) {
-        console.error('Error:', error);
+      
         res.status(500).json({ message: 'Internal server error' });
     }
 }

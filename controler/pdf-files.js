@@ -186,6 +186,7 @@ const downLoadInstallmentSlip = async (req, res) => {
         const db = getDB();
         const collection = db.collection('selldevice');
         const data = req.query;
+        console.log(data);
 
         if (!data) {
             return res.status(400).json({ error: 'invalid request' });
