@@ -193,7 +193,7 @@ const downLoadInstallmentSlip = async (req, res) => {
         }
 
         try {
-            const result = await collection.findOne({ loanId: data.loanId });
+            const result = await collection.findOne({ loanId: data.loanid });
             if (!result) {
                 return res.status(404).json({ message: 'Loan not found' });
             }
