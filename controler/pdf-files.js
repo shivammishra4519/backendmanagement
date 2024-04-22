@@ -170,13 +170,10 @@ const downLoadInstallmentSlip = async (req, res) => {
         const db = getDB();
         const collection = db.collection('selldevice');
         const data = req.query;
-      let i=0;
-i=i+1;
-console.log(i,'=',data),console.log("data",data)
-if (!data || !data.loanId || !data.emiId) {
-    return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
-}
-
+console.log(data)
+        if (!data || !data.loanId || !data.emiId) {
+            return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+        }
 
         try {
             const result = await collection.findOne({ loanId: data.loanId });
@@ -188,29 +185,26 @@ if (!data || !data.loanId || !data.emiId) {
                 return res.status(404).json({ message: 'Installment not found' });
             }
 
-
             const browser = await puppeteer.launch({
                 executablePath: '/usr/bin/chromium-browser',
-                // executablePath: '/snap/bin/chromium',
-                args: ['--no-sandbox', '--disable-setuid-sandbox'],// Update with the correct path to Chrome on your VPS
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
             });
-    
+
             const page = await browser.newPage();
-    
+
             try {
-                // installment-slip?loanid=17136177268040sAb&emiId=EMI3
                 await page.goto(`${url}/installment-slip?loanid=${data.loanId}&emiId=${data.emiId}`, { waitUntil: 'networkidle2' });
-    
+
                 const pdfOptions = {
                     format: 'A4',
                     printBackground: true,
                 };
                 await page.addStyleTag({ content: 'body { font-family: "Noto Sans Devanagari", sans-serif; }' });
                 const pdfBuffer = await page.pdf(pdfOptions);
-    
+
                 res.setHeader('Content-Disposition', 'attachment; filename="installment-slip.pdf"');
                 res.setHeader('Content-Type', 'application/pdf');
-    
+
                 res.send(pdfBuffer);
             } catch (error) {
                 console.error('Error generating PDF:', error);
@@ -227,6 +221,7 @@ if (!data || !data.loanId || !data.emiId) {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 module.exports = { downLoadTermsConditon, downLoadInstallmentSlip };
 
