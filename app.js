@@ -19,7 +19,8 @@ const shop=require('././route/shops-route');
 const city=require('./route/cites');
 const guarantor=require('./route/guarantor-route');
 const contactus=require('./route/contactus-route');
-const pdf=require('./route/pdf-route')
+const pdf=require('./route/pdf-route');
+const profile=require('./route/profile-route');
 const cors=require('cors');
 const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
@@ -45,11 +46,12 @@ app.use('/forget',forgetPassword);
 app.use('/details',details);
 app.use('/brand',brand);
 app.use('/shops',shop)
-app.use('/api',city)
+app.use('/api',city);
 app.use('/api', paytm);
 app.use('/guarantor', guarantor);
-app.use('/conactus',contactus)
-app.use('/pdf',pdf)
+app.use('/conactus',contactus);
+app.use('/pdf',pdf);
+app.use('/profile',profile);
 
 
 app.get('/', (req, res) => {

@@ -10,6 +10,7 @@ const userModel=joi.object({
     pin:joi.string().required(),
     password:joi.string().required(),
     confirmPassword:joi.string().required(),
+    address:joi.string().required(),
 })
 
 module.exports={userModel};

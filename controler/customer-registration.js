@@ -3,7 +3,7 @@ const { customerschema } = require('../model/customer-registration');
 const { getCurrentDate } = require('./functions')
 const { getDB } = require('../dbconnection');
 const { createWallet } = require('../controler/wallet');
-const { number } = require('joi');
+
 require('dotenv').config();
 
 const key = process.env.secretkey;
