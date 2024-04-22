@@ -172,7 +172,7 @@ const downLoadInstallmentSlip = async (req, res) => {
         const data = req.query;
       let i=0;
 i=i+1;
-console.log(i,'=',data)
+console.log(i,'=',data),console.log("data",data)
 if (!data || !data.loanId || !data.emiId) {
     return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
 }
