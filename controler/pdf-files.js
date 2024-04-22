@@ -197,8 +197,8 @@ if (!data || !data.loanId || !data.emiId) {
             const page = await browser.newPage();
     
             try {
-                
-                await page.goto(`${url}/installment-slip?loanid=${data.loanId}&emiid=${data.emiId}`, { waitUntil: 'networkidle2' });
+                // installment-slip?loanid=17136177268040sAb&emiId=EMI3
+                await page.goto(`${url}/installment-slip?loanid=${data.loanId}&emiId=${data.emiId}`, { waitUntil: 'networkidle2' });
     
                 const pdfOptions = {
                     format: 'A4',
