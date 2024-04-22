@@ -170,14 +170,14 @@ const downLoadInstallmentSlip = async (req, res) => {
         const db = getDB();
         const collection = db.collection('selldevice');
         const data = req.query;
-        console.log('number',data.loanId)
-console.log(data)
+
         if (!data || !data.loanId || !data.emiId) {
             return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
         }
 
         try {
             const result = await collection.findOne({ loanId: data.loanId });
+            console.log('data',result)
             if (!result) {
                 return res.status(404).json({ message: 'Loan not found' });
             }
