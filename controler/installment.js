@@ -241,7 +241,7 @@ const findInstallmentByloanId = async (req, res) => {
     const db = getDB();
     const collection = db.collection('selldevice');
     const data = req.body;
-    console.log(data)
+    console.log("data",data)
   
     if (!data || !data.loanId) {
         return res.status(400).json({ message: 'Loan ID not provided' });
