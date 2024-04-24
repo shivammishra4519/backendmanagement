@@ -62,6 +62,9 @@ const sellDevice = async (req, res) => {
             data.installments = installments;
             data.purchaseDate = getCurrentDate();
             data.time = getCurrentTime();
+            data.shop=decodedToken.shop;
+            data.currentCredit=data.financeAmount;
+
 
 
             // first transection admin to customer 
@@ -429,4 +432,36 @@ const checkStatus = async (req, res) => {
 
 
 
-module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData }
+const viewAlldeviceSold=async (req,res)=>{
+    try{
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            }
+            
+
+            const db=getDB();
+            const collection=db.collection('selldevice');
+            const result=await collection.find().toArray();
+            if(result){
+                return res.status(200).json(result);
+            }
+            res.status(400).json({message:'data not found'})
+        });
+
+    }catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+}
+
+module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData,viewAlldeviceSold }

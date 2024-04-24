@@ -35,7 +35,9 @@ const viewEmidetailsByNumber = async (req, res) => {
     } catch (error) {
         res.status(400).json(error)
     }
-}
+};
+
+
 const payInstallment = async (req, res) => {
     try {
         const data = req.body;
@@ -53,19 +55,25 @@ const payInstallment = async (req, res) => {
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
 
             const employeId = decodedToken.number;
+            const role = decodedToken.role;
+
             const db = getDB();
             const wallet = db.collection('wallets');
             const collection = db.collection('users');
             const emiCollection = db.collection('selldevice');
             const loanWallet = db.collection('loanwallets');
 
+
+            // checking balance of employee
+            if (role == 'admin') {
+                return res.status(400).json({ message: 'invalid request' })
+            }
             const balanceCheck = await wallet.findOne({ user_id: employeId });
             if (!balanceCheck)
                 return res.status(400).json({ message: 'Something went wrong with employer balance check' });
 
             if (balanceCheck.amount < data.amount) {
                 return res.status(400).json({ message: 'Insufficient balance' });
-
             }
 
             const result = await collection.findOne({ number: employeId });
@@ -75,6 +83,7 @@ const payInstallment = async (req, res) => {
             if (!isPinMatched)
                 return res.status(400).json({ message: 'Incorrect PIN' });
 
+            // checking loan wallet
             const customerCheck = await loanWallet.findOne({ loanId: data.loan_Id });
 
             if (!customerCheck)
@@ -95,10 +104,14 @@ const payInstallment = async (req, res) => {
             const installments = isAlreadyPaid.installments;
             const obj = installments.find(installment => installment.installmentId === data.installmentId);
             const paid = obj.paid;
-            if (paid)
+            if (paid) {
                 return res.status(400).json({ message: 'EMI already paid' });
+            }
 
-            // Update employer and customer balances
+
+
+            let senderClosingAmount;
+            let receiverClosingAmount;
             const senderOpeningAmount = balanceCheck.amount;
             const receiverOpeningAmount = customerCheck.credit;
 
@@ -108,16 +121,19 @@ const payInstallment = async (req, res) => {
             const updateSender = { $inc: { amount: -data.amount } };
             const updateReceiver = { $inc: { credit: -data.amount } };
 
-            const result1 = await wallet.findOneAndUpdate(senderFilter, updateSender, { returnOriginal: true });
-            const result2 = await loanWallet.findOneAndUpdate(receiverFilter, updateReceiver, { returnOriginal: true });
+            const result1 = await wallet.findOneAndUpdate(senderFilter, updateSender, { returnOriginal: false });
+            const result2 = await loanWallet.findOneAndUpdate(receiverFilter, updateReceiver, { returnOriginal: false });
+            const amountCheckAfterCustomer = await loanWallet.findOne(receiverFilter);
 
-            const senderClosingAmount = result1.amount;
-            const receiverClosingAmount = result2.credit;
+            const amountCheckAfterEmployee = await wallet.findOne(senderFilter);
+
+            senderClosingAmount = amountCheckAfterEmployee.amount;
+            receiverClosingAmount = amountCheckAfterCustomer.credit;
 
             // Record transaction history
-            const transectionHistory = db.collection('transectiondetails');
+            const transactionHistory = db.collection('emipaidhistory');
 
-            const transectionInfo = {
+            const transactionInfo = {
                 senderDetails: { senderOpeningAmount, senderClosingAmount },
                 receiverDetails: { receiverOpeningAmount, receiverClosingAmount },
                 TransactionID: generateTransactionID(),
@@ -126,23 +142,25 @@ const payInstallment = async (req, res) => {
                 amount: data.amount,
                 senderId: decodedToken.number,
                 receiverId: parseInt(data.user_id),
-                type: 'emiPaid'
+                type: 'emiPaid',
+                type1: 'emToCs'
             };
 
-            const createTransactionHistory = await transectionHistory.insertOne(transectionInfo);
+            const createTransactionHistory = await transactionHistory.insertOne(transactionInfo);
             if (!createTransactionHistory)
                 return res.status(400).json({ message: 'Failed to record transaction history' });
 
-            // Update EMI installment status
+
+
+
             const payDate = getCurrentDate();
-            console.log(payDate);
+
             const update = {
                 $set: {
                     "installments.$[elem].paid": true,
                     "installments.$[elem].payDate": payDate
                 }
             };
-
             const options = {
                 arrayFilters: [{ "elem.installmentId": data.installmentId }],
                 returnOriginal: false
@@ -150,6 +168,12 @@ const payInstallment = async (req, res) => {
 
             const updatedEmi = await emiCollection.findOneAndUpdate(filter, update, options);
 
+            emiCollection.updateOne(
+                {loanId: data.loan_Id }, // Filter criteria
+                { $set: { currentCredit: receiverClosingAmount } } // Update operation using $set
+              );
+              
+            
             if (!updatedEmi)
                 return res.status(400).json({ message: 'Failed to update EMI installment status' });
 
@@ -166,11 +190,13 @@ const payInstallment = async (req, res) => {
             const adminUpdate = { $inc: { amount: data.amount } };
 
             const resultAdmin = await wallet.findOneAndUpdate(adminFilter, adminUpdate, { returnOriginal: true });
-            const adminClosing = resultAdmin.amount;
+            const adminWalletCheckAfter = await wallet.findOne(adminFilter);
+
+            const adminClosing = adminWalletCheckAfter.amount;
 
             const adminTransactionInfo = {
                 senderDetails: {
-                    senderOpeningAmount: receiverOpeningAmount,
+                    senderOpeningAmount: customerCheck.credit,
                     senderClosingAmount: receiverClosingAmount
                 },
                 receiverDetails: {
@@ -183,10 +209,11 @@ const payInstallment = async (req, res) => {
                 amount: data.amount,
                 senderId: parseInt(data.user_id),
                 receiverId: adminId,
-                type: 'emiPaid'
+                type: 'emiPaid',
+                type1: 'toAdmin'
             };
 
-            const createAdminTransaction = await transectionHistory.insertOne(adminTransactionInfo);
+            const createAdminTransaction = await transactionHistory.insertOne(adminTransactionInfo);
             if (!createAdminTransaction)
                 return res.status(400).json({ message: 'Failed to record admin transaction' });
 
@@ -241,8 +268,8 @@ const findInstallmentByloanId = async (req, res) => {
     const db = getDB();
     const collection = db.collection('selldevice');
     const data = req.body;
-    console.log(data,"hhhhhhh")
-  
+
+
     if (!data || !data.loanId) {
         return res.status(400).json({ message: 'Loan ID not provided' });
     }
@@ -255,15 +282,59 @@ const findInstallmentByloanId = async (req, res) => {
         if (!installment) {
             return res.status(404).json({ message: 'Installment not found' });
         }
-       
+
         // Do something with the installment data
         res.status(200).json(result);
     } catch (error) {
-      
+
         res.status(500).json({ message: 'Internal server error' });
     }
 }
 
+
+const viewAllemi = async (req, res) => {
+    try {
+
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader)
+            return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
+
+        const token = authHeader.split(' ')[1];
+        if (!token)
+            return res.status(401).json({ message: 'Unauthorized: Token missing' });
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            }
+            const number = decodedToken.number;
+            const role = decodedToken.role;
+            const db = getDB();
+            const collection = db.collection('emipaidhistory');
+            if (role == 'admin') {
+                const result = await collection.find({ type1: 'emToCs' }).toArray();
+                if (result) {
+                    return res.status(200).json(result);
+                }
+
+                return res.status(400).json({ message: 'data not found' })
+            }
+            const result = await collection.find({ senderId: number }).toArray();
+            if (result) {
+                return res.status(200).json(result);
+            }
+            res.status(400).json({ message: 'data not found' })
+
+        });
+
+
+
+    } catch (error) {
+
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 
 function getCurrentTime() {
@@ -288,7 +359,7 @@ function getCurrentDate() {
     return `${day}-${month}-${year}`;
 }
 
-module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi,findInstallmentByloanId }
+module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi }
 
 
 

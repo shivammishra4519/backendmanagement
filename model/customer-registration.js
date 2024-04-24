@@ -16,7 +16,7 @@ const customerschema = joi.object({
     secondIdType:joi.string().required(),
     otp:joi.any(),
     otpAdhar:joi.any(),
-    shop:joi.string().required(),
+    shop:joi.any(),
 });
 
 module.exports = { customerschema }; // Corrected export statement

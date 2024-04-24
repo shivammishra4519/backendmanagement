@@ -84,7 +84,7 @@ const customerList = async (req, res) => {
 
         // Extracting the token part after "Bearer "
         const token = authHeader.split(' ')[1];
-        console.log("after split", token);
+    
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized: Token missing' });
         }
@@ -96,8 +96,18 @@ const customerList = async (req, res) => {
             try {
                 const db = getDB();
                 const collection = db.collection('customers');
-                const result = await collection.find().toArray();
-                return res.status(200).json(result);
+                const role=decodedToken.role;
+                if(role == 'admin' || role == 'employee'){
+                    const result = await collection.find().toArray();
+                    return res.status(200).json(result);
+                }
+                const shop=decodedToken.shop;
+                const result=await collection.find({shop:shop}).toArray();
+                if(result){
+                    return res.status(200).json(result)
+                }
+                return res.status(400).json({message:'data not found'})
+                
             } catch (error) {
                 console.error('Error:', error);
                 return res.status(500).json({ error: 'Internal server error' });
