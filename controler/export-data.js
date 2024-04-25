@@ -83,45 +83,50 @@ const exportDataInExcel = async (req, res) => {
 };
 
 
+const allCreadit = async (req, res) => {
+    try {
+        
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        
+        const result = await collection.aggregate([
+            {
+                $addFields: {
+                    purchaseDate: {
+                        $dateFromString: {
+                            dateString: '$purchaseDate',
+                            format: '%d-%m-%Y' // Specify the format of the date string
+                        }
+                    }
+                }
+            },
+            {
+                $match: {
+                    purchaseDate: {
+                        $gte: new Date('2024-04-01'),
+                        $lte: new Date('2024-04-30')
+                    }
+                }
+            }
+        ]).toArray();
+        
+        res.status(200).json(result);
+        
+
+        
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
 
 
 module.exports = {
-    exportDataInExcel
+    exportDataInExcel,allCreadit
 };
 
 
 
-// const exportDataInExcel = async (req, res) => {
-//     try {
-//         const db = getDB();
-//         const collection = db.collection('selldevice');
-
-//         // Create a new Excel workbook
-//         const workbook = new Excel.Workbook();
-//         const worksheet = workbook.addWorksheet('Data');
-
-//         // Query the collection to find all documents
-        // const documents = await collection.find({}).toArray();
-
-        // // Write headers to Excel worksheet
-        // worksheet.addRow(Object.keys(documents[0]));
-
-        // // Write each document to Excel worksheet
-        // documents.forEach(doc => {
-        //     worksheet.addRow(Object.values(doc));
-        // });
-
-        // // Save Excel file
-        // const excelFilePath = path.join(__dirname, '..', 'output.xlsx');
-        // await workbook.xlsx.writeFile(excelFilePath);
-
-        // console.log('Excel file generated successfully');
-
-        // // Send the Excel file as a response
-        // res.sendFile(excelFilePath);
-
-//     } catch (error) {
-//         console.error('Error:', error);
-//         return res.status(500).json({ error: 'Internal server error' });
-//     }
-// };

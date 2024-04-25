@@ -464,4 +464,57 @@ const viewAlldeviceSold=async (req,res)=>{
     }
 }
 
-module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData,viewAlldeviceSold }
+
+
+
+const filterDataByDate = async (req, res) => {
+    try {
+        const { from, to, number } = req.body; // Destructure the request body to get the 'from', 'to', and 'number' properties
+
+        const db = getDB();
+        const collection = db.collection('selldevice');
+      
+        
+        const matchStage = {
+            $match: {}
+        };
+
+        // If 'from' and 'to' dates are provided, add them to the $match stage
+        if (from && to) {
+            matchStage.$match.purchaseDate = {
+                $gte: new Date(from),
+                $lte: new Date(to)
+            };
+        }
+
+        // If 'number' is provided, add it to the $match stage
+        if (number) {
+            matchStage.$match.customerNumber = number;
+        }
+
+        const result = await collection.aggregate([
+            {
+                $addFields: {
+                    purchaseDate: {
+                        $dateFromString: {
+                            dateString: '$purchaseDate',
+                            format: '%d-%m-%Y' // Specify the format of the date string
+                        }
+                    }
+                }
+            },
+            matchStage // Use the dynamically created $match stage
+        ]).toArray();
+       
+        res.status(200).json(result);
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+
+
+module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData,viewAlldeviceSold,filterDataByDate }

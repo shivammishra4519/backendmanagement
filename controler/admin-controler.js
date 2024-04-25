@@ -26,10 +26,10 @@ const login = async (req, res) => {
             return res.status(400).json({ 'message': 'incorret password' })
         }
 
-        const status=user.active;
-        
-        if(!status){
-            return res.status(400).json({message:'You are not avtive Contect to Your Admin'})
+        const status = user.active;
+
+        if (!status) {
+            return res.status(400).json({ message: 'You are not avtive Contect to Your Admin' })
         }
         const payload = {
             number: number,
@@ -41,106 +41,140 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign(payload, key, { expiresIn: tokenExpiry });
-        res.status(200).json({token});
+        res.status(200).json({ token });
     } catch (error) {
         return res.status(500).json({ 'message': 'Internal server error' });
     }
 };
 
 
-const veirfyToken=async(req,res)=>{
-    try{
-      
-       
+const veirfyToken = async (req, res) => {
+    try {
+
+
         const authHeader = req.headers['authorization'];
-       
+
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
-            
+
         }
 
-        const token =  authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized: Token missing' });
         }
 
         jwt.verify(token, key, async (err, decodedToken) => {
-            if ( err) {
+            if (err) {
                 return res.status(400).json({ error: 'Unauthorized: Invalid token' });
             }
-            res.status(200).json({message:'success'})
+            res.status(200).json({ message: 'success' })
         });
-    }catch (error) {
+    } catch (error) {
         return res.status(500).json({ 'message': 'Internal server error' });
     }
 }
 
 
-const fundTransferByadmin=async (req,res)=>{
-    try{
+const fundTransferByadmin = async (req, res) => {
+    try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
 
-        const token =  authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized: Token missing' });
         }
 
         jwt.verify(token, key, async (err, decodedToken) => {
-            if ( err) {
+            if (err) {
                 return res.status(400).json({ error: 'Unauthorized: Invalid token' });
             }
-           
-            const db=getDB();
-            const collection=db.collection('transectiondetails');
-            const query={
-                type:'direct',
-                senderId:decodedToken.number
+
+            const db = getDB();
+            const collection = db.collection('transectiondetails');
+            const query = {
+                type: 'direct',
+                senderId: decodedToken.number
             }
-            const result=await collection.find(query).toArray();
-            if(!result){
-                return res.status(400).json({message:'Invalid request'});
+            const result = await collection.find(query).toArray();
+            if (!result) {
+                return res.status(400).json({ message: 'Invalid request' });
             }
             res.status(200).json(result);
         });
-    }catch (error) {
+    } catch (error) {
         return res.status(500).json({ 'message': 'Internal server error' });
     }
 }
 
-const fundReciveByadmin=async (req,res)=>{
-    try{
+const fundReciveByadmin = async (req, res) => {
+    try {
         const authHeader = req.headers['authorization'];
-        console.log('hh')
+       
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
 
-        const token =  authHeader.split(' ')[1];
+        const token = authHeader.split(' ')[1];
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized: Token missing' });
         }
 
         jwt.verify(token, key, async (err, decodedToken) => {
-            if ( err) {
+            if (err) {
                 return res.status(400).json({ error: 'Unauthorized: Invalid token' });
             }
-           
-            const db=getDB();
-            const collection=db.collection('transectiondetails');
-            const query={
-                receverId:decodedToken.number
+
+            const db = getDB();
+            const collection = db.collection('transectiondetails');
+            const query = {
+                receverId: decodedToken.number
             }
-            const result=await collection.find(query).toArray();
-            if(!result){
-                return res.status(400).json({message:'Invalid request'});
+            const result = await collection.find(query).toArray();
+            if (!result) {
+                return res.status(400).json({ message: 'Invalid request' });
             }
             res.status(200).json(result);
         });
-    }catch (error) {
+    } catch (error) {
         return res.status(500).json({ 'message': 'Internal server error' });
     }
 }
-module.exports = { login,veirfyToken,fundTransferByadmin ,fundReciveByadmin};
+const findAdminId = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                if (err.name === 'TokenExpiredError') {
+                    return res.status(401).json({ error: 'Unauthorized: Token expired' });
+                }
+                return res.status(400).json({ error: 'Unauthorized: Invalid token' });
+            }
+
+            const db = getDB();
+            const collection = db.collection('users');
+            const result = await collection.findOne({ role: 'admin' }, { projection: { number: 1, _id: 0 } });
+            if (result) {
+                return res.status(200).json(result); // Return admin user information
+            }
+            res.status(400).json({ message: 'Invalid request' });
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+module.exports = { login, veirfyToken, fundTransferByadmin, fundReciveByadmin,findAdminId };

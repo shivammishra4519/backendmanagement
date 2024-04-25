@@ -202,8 +202,47 @@ const viewEmployees = async (req, res) => {
 }
 
 
+const allCreadit = async (req, res) => {
+    try {
+        // const authHeader = req.headers['authorization'];
+        // if (!authHeader) {
+        //     return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        // }
+
+        // const token = authHeader.split(' ')[1];
+        // if (!token) {
+        //     return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        // }
+
+        // jwt.verify(token, key, async (err, decodedToken) => {
+        //     if (err) {
+        //         console.error('JWT verification error:', err);
+        //         return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+        //     }
+        const db = getDB();
+        const collection = db.collection('loanwallets');
+        const result = await collection.find({}, {
+            projection: {
+                credit: 1, _id: 0
+            }
+        }).toArray();
+
+        // Calculate the sum of all credits
+        const totalCredit = result.reduce((sum, item) => sum + item.credit, 0);
+
+        res.status(200).json({ totalCredit });
+
+        // })
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 
 
 
-module.exports = { viewDetailsCustomer, viewRegisterDevices, viewSoldDevices, viewShops,viewEmployees }
+
+
+module.exports = { viewDetailsCustomer, viewRegisterDevices, viewSoldDevices, viewShops, viewEmployees, allCreadit }

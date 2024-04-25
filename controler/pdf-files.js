@@ -138,7 +138,7 @@ const downLoadTermsConditon = async (req, res) => {
 
         try {
 
-            
+
             await page.goto(`${url}/terms-condtiton?order=${number}`, { waitUntil: 'networkidle2' });
 
             const pdfOptions = {
@@ -177,7 +177,7 @@ const downLoadInstallmentSlip = async (req, res) => {
 
         try {
             const result = await collection.findOne({ loanId: data.loanId });
-          
+
             if (!result) {
                 return res.status(404).json({ message: 'Loan not found' });
             }
@@ -224,5 +224,37 @@ const downLoadInstallmentSlip = async (req, res) => {
 };
 
 
-module.exports = { downLoadTermsConditon, downLoadInstallmentSlip };
+
+
+const dataForInvoice = async (req, res) => {
+    try {
+        const data = req.body;
+        
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const collection1 = db.collection('users');
+        const result = await collection.findOne({ loanId: data.loanId });
+        const result1 = await collection1.findOne({ number: parseInt(data.number) }, {
+            projection: {
+                number: 1,
+                shopName: 1,
+                state: 1,
+                district: 1,
+                GSTIN:1,
+                panNo:1,
+                _id: 0
+            }
+        });
+
+        if(result || result1){
+            return res.status(200).json({result,result1})
+        }
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+module.exports = { downLoadTermsConditon, downLoadInstallmentSlip ,dataForInvoice};
 
