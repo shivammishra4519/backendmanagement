@@ -199,10 +199,13 @@ const transectiondetails = async (req, res) => {
             }
             const db = getDB();
             const collection = db.collection('transectiondetails');
+            const collection1 = db.collection('emipaidhistory');
+            let dataArray=[]
 
             const role = decodedToken.role;
             if (role == 'admin') {
                 const filterData = await collection.find({ type: 'direct' }).sort({ createdAt: -1 }).limit(100).toArray();
+                const filterData1 = await collection.find({ type1: 'toAdmin' }).sort({ createdAt: -1 }).limit(100).toArray();
                 return res.status(200).json(filterData);
             }
             const number = decodedToken.number;

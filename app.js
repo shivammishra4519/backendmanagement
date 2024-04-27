@@ -22,6 +22,7 @@ const contactus=require('./route/contactus-route');
 const pdf=require('./route/pdf-route');
 const profile=require('./route/profile-route');
 const files=require('./route/files-route');
+const dailyCollection=require('./route/dailyCollectionRoute');
 const cors=require('cors');
 const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
@@ -54,6 +55,7 @@ app.use('/conactus',contactus);
 app.use('/pdf',pdf);
 app.use('/profile',profile);
 app.use('/files',files);
+app.use('/collection',dailyCollection);
 
 
 app.get('/', (req, res) => {

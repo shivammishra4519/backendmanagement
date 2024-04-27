@@ -204,21 +204,21 @@ const viewEmployees = async (req, res) => {
 
 const allCreadit = async (req, res) => {
     try {
-        // const authHeader = req.headers['authorization'];
-        // if (!authHeader) {
-        //     return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
-        // }
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
 
-        // const token = authHeader.split(' ')[1];
-        // if (!token) {
-        //     return res.status(401).json({ error: 'Unauthorized: Token missing' });
-        // }
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
 
-        // jwt.verify(token, key, async (err, decodedToken) => {
-        //     if (err) {
-        //         console.error('JWT verification error:', err);
-        //         return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-        //     }
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                console.error('JWT verification error:', err);
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
         const db = getDB();
         const collection = db.collection('loanwallets');
         const result = await collection.find({}, {
@@ -232,7 +232,90 @@ const allCreadit = async (req, res) => {
 
         res.status(200).json({ totalCredit });
 
-        // })
+        })
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+const allUsersWallet = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                console.error('JWT verification error:', err);
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+
+            const db = getDB();
+            const collection = db.collection('users');
+            const walletCollection = db.collection('wallets');
+
+            // Fetch numbers of all users
+            const usersResult = await collection.find({role:'user'}, { projection: { number: 1, _id: 0 } }).toArray();
+            const numbers = usersResult.map(user => user.number);
+
+            // Find wallets for all users based on their numbers
+            const wallets = await walletCollection.find({ user_id: { $in: numbers } }).toArray();
+
+            // Calculate the sum of all wallet amounts
+            const totalAmount = wallets.reduce((sum, wallet) => sum + wallet.amount, 0);
+
+            return res.status(200).json({ totalAmount });
+        });
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+const allEmployeeWallet = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                console.error('JWT verification error:', err);
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+
+            const db = getDB();
+            const collection = db.collection('users');
+            const walletCollection = db.collection('wallets');
+
+            // Fetch numbers of all users
+            const usersResult = await collection.find({role:'employee'}, { projection: { number: 1, _id: 0 } }).toArray();
+            const numbers = usersResult.map(user => user.number);
+
+            // Find wallets for all users based on their numbers
+            const wallets = await walletCollection.find({ user_id: { $in: numbers } }).toArray();
+
+            // Calculate the sum of all wallet amounts
+            const totalAmount = wallets.reduce((sum, wallet) => sum + wallet.amount, 0);
+
+            return res.status(200).json({ totalAmount });
+        });
 
     } catch (error) {
         console.error('Internal server error:', error);
@@ -243,6 +326,4 @@ const allCreadit = async (req, res) => {
 
 
 
-
-
-module.exports = { viewDetailsCustomer, viewRegisterDevices, viewSoldDevices, viewShops, viewEmployees, allCreadit }
+module.exports = { viewDetailsCustomer, viewRegisterDevices, viewSoldDevices, viewShops, viewEmployees, allCreadit,allUsersWallet,allEmployeeWallet }

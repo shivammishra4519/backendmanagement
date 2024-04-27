@@ -9,6 +9,7 @@ const key = process.env.secretkey;
 const viewEmidetailsByNumber = async (req, res) => {
     try {
         const data = req.body;
+
         if (!data) {
             return res.status(400).json({ 'message': 'bad request' });
         }
@@ -16,13 +17,13 @@ const viewEmidetailsByNumber = async (req, res) => {
         const db = getDB()
         const collection = db.collection('selldevice');
         const number = data.number;
-        const customerNumber = data.customerNumber;
+        const loanId = data.loanId;
         let result
         if (number) {
             result = await collection.findOne({ customerNumber: number });
         }
-        if (customerNumber) {
-            result = await collection.findOne({ customerNumber: customerNumber });
+        if (loanId) {
+            result = await collection.findOne({ loanId: loanId });
         }
 
         if (!result) {
@@ -62,6 +63,7 @@ const payInstallment = async (req, res) => {
             const collection = db.collection('users');
             const emiCollection = db.collection('selldevice');
             const loanWallet = db.collection('loanwallets');
+            const dailyCollection = db.collection('dailyCollection')
 
 
             // checking balance of employee
@@ -169,11 +171,11 @@ const payInstallment = async (req, res) => {
             const updatedEmi = await emiCollection.findOneAndUpdate(filter, update, options);
 
             emiCollection.updateOne(
-                {loanId: data.loan_Id }, // Filter criteria
+                { loanId: data.loan_Id }, // Filter criteria
                 { $set: { currentCredit: receiverClosingAmount } } // Update operation using $set
-              );
-              
-            
+            );
+
+
             if (!updatedEmi)
                 return res.status(400).json({ message: 'Failed to update EMI installment status' });
 
@@ -214,6 +216,34 @@ const payInstallment = async (req, res) => {
             };
 
             const createAdminTransaction = await transactionHistory.insertOne(adminTransactionInfo);
+            data.employeeId = decodedToken.number;
+            data.date = getCurrentDate();
+            data.time = getCurrentTime();
+            const emiPaidCollection = db.collection('emiPaidHistory');
+            const isInsert = await emiPaidCollection.insertOne(data);
+
+            if (role == 'employee') {
+                const obj = {
+                    user_id: decodedToken.number,
+                    amount: data.amount
+                };
+                
+                const find = await dailyCollection.findOne({ user_id: decodedToken.number });
+                
+                if (!find) {
+                    // If user does not exist, insert a new document
+                    await dailyCollection.insertOne(obj);
+                } else {
+                    // If user exists, update the existing document to add the new amount
+                    const newAmount = find.amount + data.amount;
+                    await dailyCollection.updateOne(
+                        { user_id: decodedToken.number },
+                        {$inc: { amount: data.amount } }
+                    );
+                }
+                
+
+            }
             if (!createAdminTransaction)
                 return res.status(400).json({ message: 'Failed to record admin transaction' });
 

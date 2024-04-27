@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const {getUserBytoken,changePassWord}=require('../controler/profile-controler')
+const {getUserBytoken,changePassWord,changePin,updateAddress}=require('../controler/profile-controler')
 
 
 router.post('/find',getUserBytoken);
-router.post('/password/chnage',changePassWord);
+router.post('/password/chanage',changePassWord);
+router.post('/pin/chanage',changePin);
+router.post('/update/address',updateAddress);
 
 
 
