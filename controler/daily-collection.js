@@ -166,4 +166,74 @@ const settleDailyAmount = async (req, res) => {
         return res.status(500).json({ 'message': 'Internal server error' });
     }
 }
-module.exports = { findDailyCollection, findAllDailyCollection ,settleDailyAmount}
+
+const findCollection=async(req,res)=>{
+    try{
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(400).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const role = decodedToken.role;
+            const db=getDB();
+            const collection=db.collection('collectioSettle');
+            if (role == 'admin') {
+                const result=await collection.find().toArray();
+                if(result){
+                    return res.status(200).json(result);
+                }
+                return res.status(400).json({message:'data not found'});
+            }
+            const number=decodedToken.number;
+
+            const result=await collection.find({user_id:number.toString()});
+            res.status(200).json(result);
+
+        });
+    } catch (error) {
+        return res.status(500).json({ 'message': 'Internal server error' });
+    }
+}
+
+const findUserWithWallet=async (req,res)=>{
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(400).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const role = decodedToken.role;
+            const db=getDB();
+            const collection=db.collection('dailyCollection');
+            if (role !== 'admin') {
+                return res.status(400).json({message:'data not found'});
+            }
+            const result=await collection.find().toArray();
+            res.status(200).json(result);
+        });
+        
+    } catch (error) {
+        return res.status(500).json({ 'message': 'Internal server error' });
+    }
+}
+module.exports = { findDailyCollection, findAllDailyCollection ,settleDailyAmount,findCollection,findUserWithWallet}

@@ -1,6 +1,6 @@
 // const puppeteer = require('puppeteer-core');
 // const path = require('path'); const jwt = require('jsonwebtoken');
-// const {getDB}=require('../dbconnection')
+// const { getDB } = require('../dbconnection')
 // require('dotenv').config();
 // const url = process.env.frontEnd;
 // const key = process.env.secretkey;
@@ -109,8 +109,108 @@
 //     }
 // };
 
+// const downloadAggrement = async (req, res) => {
+//     try {
+//         const db = getDB();
+//         const collection = db.collection('selldevice');
+//         const data = req.query;
+
+//         if (!data || !data.loanId || !data.shopId) {
+//             return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+//         }
+
+
+//         const url = process.env.frontEnd; // Define the front-end URL
+//         const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+//         const page = await browser.newPage();
+
+//         try {
+//             // Navigate to the webpage
+//             await page.goto(`${url}/aggrement?customerId=${data.customerId}&shopId=${data.shopId}&loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
+
+//             // Set up the PDF options
+//             const pdfOptions = {
+//                 format: 'A4',
+//                 printBackground: true,
+//             };
+
+//             // Generate the PDF as a buffer
+//             const pdfBuffer = await page.pdf(pdfOptions);
+//             console.log(pdfBuffer)
+
+//             // Set response headers for file download
+//             res.setHeader('Content-Disposition', 'attachment; filename="aggrement.pdf"');
+//             res.setHeader('Content-Type', 'application/pdf');
+//             res.send(pdfBuffer);
+//         } catch (error) {
+//             console.error('Error generating PDF:', error);
+//             res.status(500).json({ error: 'Error generating PDF' });
+//         } finally {
+//             // Close the browser
+//             await browser.close();
+//         }
+//     } catch (error) {
+//         console.error('Internal server error:', error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// };
+
+// const downloadInvoiceForCustomer = async (req, res) => {
+//     try {
+//         const db = getDB();
+//         const collection = db.collection('selldevice');
+//         const data = req.query;
+
+//         if (!data || !data.loanId) {
+//             return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+//         }
+
+
+//         const url = process.env.frontEnd; // Define the front-end URL
+//         const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+//         const page = await browser.newPage();
+
+//         try {
+//             // Navigate to the webpage
+//             await page.goto(`${url}/invoice-customer?loanId=${data.loanId}&invoice=555555`, { waitUntil: 'networkidle2' });
+
+//             // Set up the PDF options
+//             const pdfOptions = {
+//                 format: 'A4',
+//                 printBackground: true,
+//             };
+
+//             // Generate the PDF as a buffer
+//             const pdfBuffer = await page.pdf(pdfOptions);
+//             console.log(pdfBuffer)
+
+//             // Set response headers for file download
+//             res.setHeader('Content-Disposition', 'attachment; filename="invoice.pdf"');
+//             res.setHeader('Content-Type', 'application/pdf');
+//             res.send(pdfBuffer);
+//         } catch (error) {
+//             console.error('Error generating PDF:', error);
+//             res.status(500).json({ error: 'Error generating PDF' });
+//         } finally {
+//             // Close the browser
+//             await browser.close();
+//         }
+//     } catch (error) {
+//         console.error('Internal server error:', error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// };
 
 // module.exports = { downLoadTermsConditon, downLoadInstallmentSlip };
+
+
+
+
+
+
+
+
+
 
 
 
@@ -223,13 +323,111 @@ const downLoadInstallmentSlip = async (req, res) => {
     }
 };
 
+const downloadAggrement = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const data = req.query;
 
+        if (!data || !data.loanId || !data.shopId) {
+            return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+        }
+
+
+        const url = process.env.frontEnd; // Define the front-end URL
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+        const browser = await puppeteer.launch({
+                            executablePath: '/usr/bin/chromium-browser',
+                            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                        });
+        const page = await browser.newPage();
+
+        try {
+            // Navigate to the webpage
+            await page.goto(`${url}/aggrement?customerId=${data.customerId}&shopId=${data.shopId}&loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
+
+            // Set up the PDF options
+            const pdfOptions = {
+                format: 'A4',
+                printBackground: true,
+            };
+
+            // Generate the PDF as a buffer
+            const pdfBuffer = await page.pdf(pdfOptions);
+            console.log(pdfBuffer)
+
+            // Set response headers for file download
+            res.setHeader('Content-Disposition', 'attachment; filename="aggrement.pdf"');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.send(pdfBuffer);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({ error: 'Error generating PDF' });
+        } finally {
+            // Close the browser
+            await browser.close();
+        }
+    } catch (error) {
+        console.error('Internal server error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const downloadInvoiceForCustomer = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const data = req.query;
+
+        if (!data || !data.loanId) {
+            return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+        }
+
+
+        const url = process.env.frontEnd; // Define the front-end URL
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+        const browser = await puppeteer.launch({
+                            executablePath: '/usr/bin/chromium-browser',
+                            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                        });
+        const page = await browser.newPage();
+
+        try {
+            // Navigate to the webpage
+            await page.goto(`${url}/invoice-customer?loanId=${data.loanId}&invoice=555555`, { waitUntil: 'networkidle2' });
+
+            // Set up the PDF options
+            const pdfOptions = {
+                format: 'A4',
+                printBackground: true,
+            };
+
+            // Generate the PDF as a buffer
+            const pdfBuffer = await page.pdf(pdfOptions);
+            console.log(pdfBuffer)
+
+            // Set response headers for file download
+            res.setHeader('Content-Disposition', 'attachment; filename="invoice.pdf"');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.send(pdfBuffer);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({ error: 'Error generating PDF' });
+        } finally {
+            // Close the browser
+            await browser.close();
+        }
+    } catch (error) {
+        console.error('Internal server error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 
 
 const dataForInvoice = async (req, res) => {
     try {
         const data = req.body;
-        
+
         const db = getDB();
         const collection = db.collection('selldevice');
         const collection1 = db.collection('users');
@@ -240,14 +438,14 @@ const dataForInvoice = async (req, res) => {
                 shopName: 1,
                 state: 1,
                 district: 1,
-                GSTIN:1,
-                panNo:1,
+                GSTIN: 1,
+                panNo: 1,
                 _id: 0
             }
         });
 
-        if(result || result1){
-            return res.status(200).json({result,result1})
+        if (result || result1) {
+            return res.status(200).json({ result, result1 })
         }
 
     } catch (error) {
@@ -256,5 +454,56 @@ const dataForInvoice = async (req, res) => {
 }
 
 
-module.exports = { downLoadTermsConditon, downLoadInstallmentSlip ,dataForInvoice};
+const findPlaceOfUserAndCustomer = async (req, res) => {
+    try {
+        const db = getDB();
+        const data = req.body;
+        console.log(data)
+        const findShopPlace = await db.collection('users').findOne({ number: parseInt(data.shopId) }, { projection: { address: 1, _id: 0 } });
+        const customerPlace = await db.collection('customers').findOne({ number: parseInt(data.customerId,) }, { projection: { state: 1, district: 1, address: 1, firstName: 1, _id: 0 } });
+        const loanDate = await db.collection('selldevice').findOne({ loanId: data.loanId }, {
+            projection: {
+                purchaseDate: 1, _id: 0
+            }
+        });
+        res.status(200).json({ findShopPlace, customerPlace, loanDate })
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const detailsOfAdmin = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('users');
+        const find = await collection.findOne({ role: 'admin' }, { projection: { address: 1, contactNumber: 1, bankDetails: 1, companyName: 1, _id: 0 } });
+        return res.status(200).json(find);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const findLoanDetails = async (req, res) => {
+    try {
+       
+        const db = getDB();
+        const data=req.body;
+       
+        const loanDetails=await db.collection('selldevice').findOne({loanId:data.loanId});
+        
+        if(!loanDetails){
+            return res.status(400).json({message:'invalid loan id'})
+        }
+        const customerNumber=loanDetails.customerNumber;
+      
+        const customerResult=await db.collection('customers').findOne({number:customerNumber});
+        res.status(200).json({loanDetails,customerResult});
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+module.exports = { downLoadTermsConditon, downLoadInstallmentSlip, dataForInvoice, findPlaceOfUserAndCustomer, downloadAggrement, detailsOfAdmin,findLoanDetails,downloadInvoiceForCustomer };
 
