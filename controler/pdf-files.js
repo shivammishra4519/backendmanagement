@@ -23,7 +23,8 @@
 
 //         try {
 //             // Navigate to the webpage
-//             await page.goto(`${url}/terms-condtiton?order=${number}`, { waitUntil: 'networkidle2' });
+//             const urlc=`${url}/terms-condtiton?order=${number}`
+//             await page.goto(`${url}/terms-condtiton?number=${number}`, { waitUntil: 'networkidle2' });
 
 //             // Set up the PDF options
 //             const pdfOptions = {
@@ -239,7 +240,7 @@ const downLoadTermsConditon = async (req, res) => {
         try {
 
 
-            await page.goto(`${url}/terms-condtiton?order=${number}`, { waitUntil: 'networkidle2' });
+            await page.goto(`${url}/terms-condtiton?number=${number}`, { waitUntil: 'networkidle2' });
 
             const pdfOptions = {
                 format: 'A4',
