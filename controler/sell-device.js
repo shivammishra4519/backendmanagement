@@ -51,7 +51,7 @@ const sellDevice = async (req, res) => {
             const number = data.customerNumber;
             const iSCustomerExit = await db.collection('customers').findOne({ number: parseInt(number) });
             if (!iSCustomerExit) {
-                return res.status(400).json({ message: 'invalid request1' })
+                return res.status(400).json({ message: 'customer not exit' })
             }
 
             const totalInstallments = parseInt(data.emi); // Total number of installments
@@ -62,27 +62,27 @@ const sellDevice = async (req, res) => {
             data.installments = installments;
             data.purchaseDate = getCurrentDate();
             data.time = getCurrentTime();
-            data.shop=decodedToken.shop;
-            data.currentCredit=data.financeAmount;
+            data.shop = decodedToken.shop;
+            data.currentCredit = data.financeAmount;
 
 
 
             // first transection admin to customer 
-            const loanWallet=db.collection('loanwallets');
-            const objwallet={
-                loanId:loanId,
-                credit:data.financeAmount
-            }  
-
-            const check=await loanWallet.findOne({loanId:loanId});
-            if(check){
-                return res.status(400).josn({error:'somtheing went wrong loanId'});
+            const loanWallet = db.collection('loanwallets');
+            const objwallet = {
+                loanId: loanId,
+                credit: data.financeAmount
             }
-            const insertIdWallet=await loanWallet.insertOne(objwallet);
-            if(!insertIdWallet){
-                return res.status(400).json({error:'database error'})
+
+            const check = await loanWallet.findOne({ loanId: loanId });
+            if (check) {
+                return res.status(400).josn({ error: 'somtheing went wrong loanId' });
+            }
+            const insertIdWallet = await loanWallet.insertOne(objwallet);
+            if (!insertIdWallet) {
+                return res.status(400).json({ error: 'database error' })
             };
-            
+
             const wallet = db.collection('wallets');
             const transectionHistory = db.collection('transectiondetails');
             // transection of remaning amount of shopkeeper from admin  
@@ -196,8 +196,15 @@ const sellDevice = async (req, res) => {
                 await transectionHistory.deleteOne({ TransactionID: tid1 });
                 return res.status(400).json({ error: 'somtheing went wrong' })
             }
+            const lengthOfCollection = await collection.find().toArray();
+            const lengthCol = lengthOfCollection.length;
 
+            const currentYear = new Date().getFullYear();
+            const invoice = currentYear.toString() + lengthCol.toString();
+            data.invoice=invoice;
+          
             const isInsertResult = await collection.insertOne(data);
+
             if (!isInsertResult) {
                 const update1Shop = { $inc: { amount: - amountCreaditToShop } };
                 await wallet.findOneAndUpdate(filter1Shop, update1Shop, { returnOriginal: false });
@@ -207,7 +214,14 @@ const sellDevice = async (req, res) => {
                 await transectionHistory.deleteOne({ TransactionID: tid1 });
                 return res.status(400).json({ error: 'somtheing went wrong' })
             }
-            res.status(200).json({ message: 'success' })
+            const resObj={
+                shopId:decodedToken.number,
+                loanId: loanId,
+                invoice:invoice
+            }
+            
+            
+            res.status(200).json(resObj)
 
         });
     } catch (error) {
@@ -341,7 +355,7 @@ const viewDeviceList = async (req, res) => {
             if (err) {
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
             }
-            console.log('he')
+           
             const db = getDB();
             const collection = db.collection('selldevice');
             const result = await collection.find().toArray();
@@ -377,7 +391,7 @@ const filterData = async (req, res) => {
         const { fromDate, toDate } = req.body; // Assuming fromDate and toDate are provided in the request body
         const db = getDB();
         const collection = db.collection('selldevice');
-       
+
 
         // Construct the query
         const query = {
@@ -414,14 +428,14 @@ const checkStatus = async (req, res) => {
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
             }
 
-            const data=req.body;
-            const db=getDB();
-            const collection=db.collection('selldevice');
-            const result=await collection.find({number:data.number}).toArray();
-            if(result){
+            const data = req.body;
+            const db = getDB();
+            const collection = db.collection('selldevice');
+            const result = await collection.find({ number: data.number }).toArray();
+            if (result) {
                 return res.status(200).josn(result)
             }
-            res.status(400).josn({message:'somtheing went wriong'})
+            res.status(400).josn({ message: 'somtheing went wriong' })
         });
 
     } catch (error) {
@@ -432,8 +446,8 @@ const checkStatus = async (req, res) => {
 
 
 
-const viewAlldeviceSold=async (req,res)=>{
-    try{
+const viewAlldeviceSold = async (req, res) => {
+    try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
             return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
@@ -448,18 +462,18 @@ const viewAlldeviceSold=async (req,res)=>{
             if (err) {
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
             }
-            
 
-            const db=getDB();
-            const collection=db.collection('selldevice');
-            const result=await collection.find().toArray();
-            if(result){
+
+            const db = getDB();
+            const collection = db.collection('selldevice');
+            const result = await collection.find().toArray();
+            if (result) {
                 return res.status(200).json(result);
             }
-            res.status(400).json({message:'data not found'})
+            res.status(400).json({ message: 'data not found' })
         });
 
-    }catch (error) {
+    } catch (error) {
         return res.status(400).json({ message: error.message });
     }
 }
@@ -473,8 +487,8 @@ const filterDataByDate = async (req, res) => {
 
         const db = getDB();
         const collection = db.collection('selldevice');
-      
-        
+
+
         const matchStage = {
             $match: {}
         };
@@ -505,7 +519,7 @@ const filterDataByDate = async (req, res) => {
             },
             matchStage // Use the dynamically created $match stage
         ]).toArray();
-       
+
         res.status(200).json(result);
 
     } catch (error) {
@@ -517,4 +531,4 @@ const filterDataByDate = async (req, res) => {
 
 
 
-module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData,viewAlldeviceSold,filterDataByDate }
+module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData, viewAlldeviceSold, filterDataByDate }

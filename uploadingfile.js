@@ -66,7 +66,7 @@ router.post('/upload', upload.fields([
         await processImageUpload('otherDocumentImages');
 
         // Sending a response with all uploaded filenames
-        console.log('Images uploaded successfully:', filenames);
+        // console.log('Images uploaded successfully:', filenames);
         res.status(200).json({ filenames: filenames, message: 'Images uploaded successfully' });
     } catch (error) {
         console.error('Error uploading images:', error);

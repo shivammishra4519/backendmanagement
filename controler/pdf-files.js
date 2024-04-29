@@ -90,7 +90,7 @@
 
 //             // Generate the PDF as a buffer
 //             const pdfBuffer = await page.pdf(pdfOptions);
-//             console.log(pdfBuffer)
+          
 
 //             // Set response headers for file download
 //             res.setHeader('Content-Disposition', 'attachment; filename="terms_condition.pdf"');
@@ -136,7 +136,7 @@
 
 //             // Generate the PDF as a buffer
 //             const pdfBuffer = await page.pdf(pdfOptions);
-//             console.log(pdfBuffer)
+          
 
 //             // Set response headers for file download
 //             res.setHeader('Content-Disposition', 'attachment; filename="aggrement.pdf"');
@@ -172,7 +172,8 @@
 
 //         try {
 //             // Navigate to the webpage
-//             await page.goto(`${url}/invoice-customer?loanId=${data.loanId}&invoice=555555`, { waitUntil: 'networkidle2' });
+           
+//             await page.goto(`${url}/invoice-customer?loanId=${data.loanId}&invoice=${data.invoice}`, { waitUntil: 'networkidle2' });
 
 //             // Set up the PDF options
 //             const pdfOptions = {
@@ -182,8 +183,7 @@
 
 //             // Generate the PDF as a buffer
 //             const pdfBuffer = await page.pdf(pdfOptions);
-//             console.log(pdfBuffer)
-
+           
 //             // Set response headers for file download
 //             res.setHeader('Content-Disposition', 'attachment; filename="invoice.pdf"');
 //             res.setHeader('Content-Type', 'application/pdf');
@@ -354,7 +354,7 @@ const downloadAggrement = async (req, res) => {
 
             // Generate the PDF as a buffer
             const pdfBuffer = await page.pdf(pdfOptions);
-            console.log(pdfBuffer)
+           
 
             // Set response headers for file download
             res.setHeader('Content-Disposition', 'attachment; filename="aggrement.pdf"');
@@ -394,9 +394,8 @@ const downloadInvoiceForCustomer = async (req, res) => {
 
         try {
             // Navigate to the webpage
-            await page.goto(`${url}/invoice-customer?loanId=${data.loanId}&invoice=555555`, { waitUntil: 'networkidle2' });
+           await page.goto(`${url}/invoice-customer?loanId=${data.loanId}&invoice=${data.invoice}`, { waitUntil: 'networkidle2' });
 
-            // Set up the PDF options
             const pdfOptions = {
                 format: 'A4',
                 printBackground: true,
@@ -404,8 +403,7 @@ const downloadInvoiceForCustomer = async (req, res) => {
 
             // Generate the PDF as a buffer
             const pdfBuffer = await page.pdf(pdfOptions);
-            console.log(pdfBuffer)
-
+           
             // Set response headers for file download
             res.setHeader('Content-Disposition', 'attachment; filename="invoice.pdf"');
             res.setHeader('Content-Type', 'application/pdf');
@@ -447,7 +445,7 @@ const dataForInvoice = async (req, res) => {
         if (result || result1) {
             return res.status(200).json({ result, result1 })
         }
-
+        res.status(400).json({message:'data not found'})
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -458,7 +456,7 @@ const findPlaceOfUserAndCustomer = async (req, res) => {
     try {
         const db = getDB();
         const data = req.body;
-        console.log(data)
+      
         const findShopPlace = await db.collection('users').findOne({ number: parseInt(data.shopId) }, { projection: { address: 1, _id: 0 } });
         const customerPlace = await db.collection('customers').findOne({ number: parseInt(data.customerId,) }, { projection: { state: 1, district: 1, address: 1, firstName: 1, _id: 0 } });
         const loanDate = await db.collection('selldevice').findOne({ loanId: data.loanId }, {
@@ -466,7 +464,10 @@ const findPlaceOfUserAndCustomer = async (req, res) => {
                 purchaseDate: 1, _id: 0
             }
         });
-        res.status(200).json({ findShopPlace, customerPlace, loanDate })
+        if(findShopPlace || customerPlace || loanDate){
+           return  res.status(200).json({ findShopPlace, customerPlace, loanDate })
+        }
+        res.status(400).json({message:'data not found'})
 
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
