@@ -19,7 +19,7 @@ sellDeviceDetails=Joi.object({
     mrp: Joi.number().required(),
     fileCharge: Joi.number().required(),
     totalAmount: Joi.number().required(),
-    discount: Joi.number().required(),
+    discount: Joi.any(),
     downPayment: Joi.number().required(),
     financeAmount: Joi.number().required(),
     emi: Joi.number().required(),

@@ -11,7 +11,7 @@ const router = express.Router();
 router.post('/sendOtp', async (req, res) => {
     try {
         const dataFromFront = req.body;
-        console.log(dataFromFront)
+       
         const url = adharApiUrl;
         const headers = {
             'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ router.post('/sendOtp', async (req, res) => {
         };
 
         const response = await axios.post(url, data, { headers: headers });
-        console.log(response)
+      
         const ref_id = response.data.response.ref_id;
 
         if (!ref_id) {
@@ -44,10 +44,10 @@ router.post('/sendOtp', async (req, res) => {
         if (!isInsertId) {
             return res.status(400).json({ messsage: 'somtheing went wrong3' });
         }
-        console.log(response)
+       
         res.status(response.status).json(response.data.response);
     } catch (error) {
-        console.error('Error:', error);
+    
         // Send error response back to client
         res.status(500).json({ error: 'An error occurred while processing your request' });
     }
@@ -66,9 +66,7 @@ router.post('/verify-otp', async (req, res) => {
             'ApiUserID': ApiUserID,
             'ApiPassword': ApiPassword
         };
-        console.log(dataFromFront)
-
-        console.log(dataFromFront)
+      
         const Aadhaarid = dataFromFront.Aadhaarid
 
         const db = getDB()
@@ -86,7 +84,7 @@ router.post('/verify-otp', async (req, res) => {
             ApiMode: '1'
         };
         const response = await axios.post(url, data, { headers: headers });
-        console.log(response)
+       
         const dataFromApi = response.data;
         const originalDate = response.data.response.dob;
         const name = response.data.response.name;
@@ -123,8 +121,7 @@ router.post('/verify-otp', async (req, res) => {
 
         res.status(200).json(obj);
     } catch (error) {
-        console.error('Error:', error);
-        // Send error response back to client
+        
         res.status(500).json({ error: 'An error occurred while processing your request' });
     }
 }
@@ -148,14 +145,13 @@ router.post('/verify-pan', async (req, res) => {
             Panid: dataFromFront.Panid,
             ApiMode: '1'
         };
-        console.log(data)
-
+       
         const response = await axios.post(url, data, { headers: headers });
-        console.log(response)
+      
 
         res.status(response.status).json(response.data.response);
     } catch (error) {
-        console.error('Error:', error);
+       
         // Send error response back to client
         res.status(500).json({ error: 'An error occurred while processing your request' });
     }

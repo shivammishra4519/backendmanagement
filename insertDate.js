@@ -1307,10 +1307,10 @@ async function insertDataInDB() {
             
             // Insert state and cities into the database
             const result = await db.collection('states').insertOne({ state, cities });
-            console.log(`Inserted ${state} with ${cities.length} cities.`);
+           
         }
         
-        console.log("Data insertion completed.");
+   
     } catch (error) {
         console.error("Error inserting data:", error);
     }

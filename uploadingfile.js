@@ -41,7 +41,7 @@ router.post('/upload', upload.fields([
                 throw new Error(`No file uploaded for ${fieldName}`);
             }
             const file = req.files[fieldName][0];
-            console.log('Processing file:', file.originalname);
+        
             const { error, value } = uploadSchema.validate({
                 filename: file.filename,
                 mimetype: file.mimetype,
@@ -49,7 +49,7 @@ router.post('/upload', upload.fields([
             });
             if (error) {
                 fs.unlinkSync(file.path);
-                console.log('Validation error:', error.details[0].message);
+              
                 throw new Error(error.details[0].message);
             }
             filenames[fieldName] = file.filename;

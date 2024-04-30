@@ -150,7 +150,7 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({ message: 'OTP has expired' });
     }
   } catch (error) {
-    console.error('Error verifying OTP:', error);
+   
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

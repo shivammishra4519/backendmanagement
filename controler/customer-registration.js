@@ -77,7 +77,7 @@ const customerRegister = async (req, res) => {
 const customerList = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
-        console.log("before split", authHeader);
+      
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
@@ -109,12 +109,12 @@ const customerList = async (req, res) => {
                 return res.status(400).json({message:'data not found'})
                 
             } catch (error) {
-                console.error('Error:', error);
+              
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
     } catch (error) {
-        console.error('Error:', error);
+      
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -144,12 +144,12 @@ const viewAllData = async (req, res) => {
                 const resultCursor = await collection.findOne({ adharCardNumber: data.adharCardNumber });
                 return res.status(200).json(resultCursor);
             } catch (error) {
-                console.error('Error:', error);
+              
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
     } catch (error) {
-        console.error('Error:', error);
+      
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -174,7 +174,7 @@ const filterCustomer = async (req, res) => {
             }
             try {
                 const data = req.body;
-                console.log("data", data)
+              
                 const db = getDB();
                 const collection = db.collection('customers');
                 const number = data.number;
@@ -189,12 +189,12 @@ const filterCustomer = async (req, res) => {
                 }
                 res.status(400).json({ message: 'invalid request' })
             } catch (error) {
-                console.error('Error:', error);
+               
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
     } catch (error) {
-        console.error('Error:', error);
+      
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -265,7 +265,7 @@ const isCustomerPresent = async (req, res) => {
             }
 
             const isUserExit = await collection.findOne(query);
-            console.log(isUserExit)
+          
             if (isUserExit) {
                 return res.status(200).json({ status: 1, message: 'Customer Alreday exit' });
             }

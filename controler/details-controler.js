@@ -141,7 +141,7 @@ const viewShops = async (req, res) => {
 
         jwt.verify(token, key, async (err, decodedToken) => {
             if (err) {
-                console.error('JWT verification error:', err);
+               
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
             const role = decodedToken.role;
@@ -154,11 +154,11 @@ const viewShops = async (req, res) => {
                 return res.status(200).json({ totalShops: total, });
             }
 
-            console.error('Invalid role:', role);
+          
             return res.status(400).json({ message: 'Invalid request' });
         });
     } catch (error) {
-        console.error('Internal server error:', error);
+       
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -179,7 +179,7 @@ const viewEmployees = async (req, res) => {
 
         jwt.verify(token, key, async (err, decodedToken) => {
             if (err) {
-                console.error('JWT verification error:', err);
+               
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
 
@@ -191,12 +191,12 @@ const viewEmployees = async (req, res) => {
                 const total = result.length;
                 return res.status(200).json({ totalEmployees: total });
             } else {
-                console.error('Invalid role:', role);
+           
                 return res.status(400).json({ message: 'Bad request' });
             }
         });
     } catch (error) {
-        console.error('Internal server error:', error);
+      
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -216,7 +216,7 @@ const allCreadit = async (req, res) => {
 
         jwt.verify(token, key, async (err, decodedToken) => {
             if (err) {
-                console.error('JWT verification error:', err);
+             
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
         const db = getDB();
@@ -235,7 +235,7 @@ const allCreadit = async (req, res) => {
         })
 
     } catch (error) {
-        console.error('Internal server error:', error);
+      
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -254,7 +254,7 @@ const allUsersWallet = async (req, res) => {
 
         jwt.verify(token, key, async (err, decodedToken) => {
             if (err) {
-                console.error('JWT verification error:', err);
+             
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
 
@@ -276,7 +276,7 @@ const allUsersWallet = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Internal server error:', error);
+       
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -296,7 +296,7 @@ const allEmployeeWallet = async (req, res) => {
 
         jwt.verify(token, key, async (err, decodedToken) => {
             if (err) {
-                console.error('JWT verification error:', err);
+              
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
 

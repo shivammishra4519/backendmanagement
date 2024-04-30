@@ -356,10 +356,24 @@ const viewDeviceList = async (req, res) => {
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
             }
            
+           
             const db = getDB();
             const collection = db.collection('selldevice');
-            const result = await collection.find().toArray();
-            res.status(200).json(result)
+            const role=decodedToken.role;
+            if(role=='admin' || role =='employee'){
+                const result = await collection.find().toArray();
+                if (result) {
+                    return res.status(200).json(result);
+                }
+                res.status(400).json({ message: 'data not found' })
+            }
+            const shop=decodedToken.shop;
+        
+            const result = await collection.find({shop:shop}).toArray();
+            if (result) {
+                return res.status(200).json(result);
+            }
+            res.status(400).json({ message: 'data not found' })
         });
     } catch (error) {
         return res.status(400).json({ message: error.message });
@@ -466,7 +480,17 @@ const viewAlldeviceSold = async (req, res) => {
 
             const db = getDB();
             const collection = db.collection('selldevice');
-            const result = await collection.find().toArray();
+            const role=decodedToken.role;
+            if(role=='admin' || role =='employee'){
+                const result = await collection.find().toArray();
+                if (result) {
+                    return res.status(200).json(result);
+                }
+                res.status(400).json({ message: 'data not found' })
+            }
+            const shop=decodedToken.shop;
+        
+            const result = await collection.find({shop:shop}).toArray();
             if (result) {
                 return res.status(200).json(result);
             }
