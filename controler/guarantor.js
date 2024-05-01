@@ -85,8 +85,6 @@ const checkGurantor = async (req, res) => {
                 ]
             });
 
-
-
             if (result) {
                 return res.status(200).json({ status: 1, message: 'user already exit' })
             }

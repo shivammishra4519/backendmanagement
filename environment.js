@@ -1,6 +1,7 @@
 const environment = {
     production: true,
     apiUrl: 'http://localhost:3000/',
+    apiUrl: 'http://localhost:3000/',
     smsApiUrl:'https://textsms.vastbazaar.com/app/smsapi/index.php',
     key: '36138A813805F9',
     campaign:'13393',

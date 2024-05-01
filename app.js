@@ -23,6 +23,7 @@ const pdf=require('./route/pdf-route');
 const profile=require('./route/profile-route');
 const files=require('./route/files-route');
 const dailyCollection=require('./route/dailyCollectionRoute');
+const imgaeUpload=require('./uploadsAndAPIS/gaurantor-images')
 const cors=require('cors');
 const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
@@ -56,6 +57,7 @@ app.use('/pdf',pdf);
 app.use('/profile',profile);
 app.use('/files',files);
 app.use('/collection',dailyCollection);
+app.use('/guarantor',imgaeUpload)
 
 
 app.get('/', (req, res) => {
