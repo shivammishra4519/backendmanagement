@@ -61,7 +61,7 @@ app.use('/guarantor',imgaeUpload)
 
 
 app.get('/', (req, res) => {
-    res.send('Welcome');
+    res.send('Welcome home api');
 });
 
 app.listen(port, () => {
