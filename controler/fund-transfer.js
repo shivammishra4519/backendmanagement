@@ -209,10 +209,56 @@ const transectiondetails = async (req, res) => {
                 return res.status(200).json(filterData);
             }
             const number = decodedToken.number;
-            const filterData = await collection
-            .find({ type: 'direct', $or: [{ senderId: number }, { receverId: number }] })
-            .toArray();
-        return res.status(200).json(filterData);
+
+            const filterData = await collection.aggregate([
+                {
+                  $match: {
+                    type: 'direct',
+                    $or: [
+                      { senderId: number },
+                      { receverId: number }
+                    ]
+                  }
+                },
+                {
+                  $project: {
+                    type: 1, // Include the 'type' field
+                    TransactionID: 1, // Include the 'TransactionID' field
+                    time: 1, // Include the 'time' field
+                    date: 1, // Include the 'date' field
+                    amount: 1, // Include the 'amount' field
+                    senderId: 1, // Include the 'senderId' field
+                    receverId: 1, // Include the 'receverId' field
+                    openingBalance: {
+                      $cond: [
+                        { $eq: ["$senderId", number] },
+                        "$senderDetails.senderOpeningAmount",
+                        "$receverDetails.receverOpeningAmount"
+                      ]
+                    },
+                    closingBalance: {
+                      $cond: [
+                        { $eq: ["$senderId", number] },
+                        "$senderDetails.senderCloseingAmount",
+                        "$receverDetails.receverCloseingAmount"
+                      ]
+                    }
+                  }
+                },
+                {
+                  $match: {
+                    $or: [
+                      { openingBalance: { $exists: true, $ne: null } },
+                      { closingBalance: { $exists: true, $ne: null } }
+                    ]
+                  }
+                }
+              ]).toArray();
+              
+              return res.status(200).json(filterData);
+              
+            
+            
         
             
 

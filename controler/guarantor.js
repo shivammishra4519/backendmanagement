@@ -151,6 +151,7 @@ const viewGaurantorByNumber = async (req, res) => {
 
             const collection = db.collection('guarantor');
             const result = await collection.findOne({ number: parseInt(number) });
+           
             if (!result) {
                 return res.status(400).json({ message: 'guarantor is not exit' });
             }

@@ -65,8 +65,6 @@ router.post('/upload', upload.fields([
         // Validate and process other document image
         await processImageUpload('otherDocumentImages');
 
-        // Sending a response with all uploaded filenames
-        // console.log('Images uploaded successfully:', filenames);
         res.status(200).json({ filenames: filenames, message: 'Images uploaded successfully' });
     } catch (error) {
         console.error('Error uploading images:', error);
@@ -84,10 +82,11 @@ router.post('/images/', async (req, res) => {
         }
 
         const imagePath = path.join(__dirname, 'uploads', imageName);
-      
+        console.log('before',imagePath);
         // Check if the image file exists
         if (fs.existsSync(imagePath)) {
             // Set appropriate content-type header
+            console.log('after',imagePath);
             res.setHeader('Content-Type', 'image/png'); 
             res.sendFile(imagePath);
         } else {

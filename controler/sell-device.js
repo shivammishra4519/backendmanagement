@@ -202,6 +202,7 @@ const sellDevice = async (req, res) => {
             const currentYear = new Date().getFullYear();
             const invoice = currentYear.toString() + lengthCol.toString();
             data.invoice=invoice;
+            data.penality=0;
           
             const isInsertResult = await collection.insertOne(data);
 

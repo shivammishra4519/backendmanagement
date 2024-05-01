@@ -77,26 +77,35 @@ router.post('/upload/guarantor', upload.fields([
 router.post('/images/guarantor', async (req, res) => {
     try {
         const imageName = req.body.fileName;
-        // Check if fileName is provided
+        console.log(imageName)
+        
+        // Check if imageName is provided
         if (!imageName) {
             return res.status(400).json({ message: 'Image name not provided' });
         }
 
-        const imagePath = path.join(__dirname, 'uploads', imageName);
-      
+        // Construct the absolute path to the image file
+        const imagePath = path.join(__dirname, 'gaurantor', imageName);
+        console.log(imagePath);
         // Check if the image file exists
         if (fs.existsSync(imagePath)) {
             // Set appropriate content-type header
-            res.setHeader('Content-Type', 'image/png'); 
+            console.log('imagePath',imagePath);
+            res.setHeader('Content-Type', 'image/png');
+            
+            // Send the image file
             res.sendFile(imagePath);
         } else {
+            // If image file does not exist, return 404 error
             res.status(404).json({ message: 'Image not found' });
         }
     } catch (error) {
+        // If an error occurs, return a 500 error
         console.error('Error serving image:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
 
 
 

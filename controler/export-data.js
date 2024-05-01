@@ -128,7 +128,7 @@ const exportDataInExcel = async (req, res) => {
                 Name:item.customerName ||'Na',
                 brandName: item.brandName,
                 modelName: item.modelName ,
-                // imei2: item.imei2,
+                shop: item.shop,
                 mrp: item.mrp,
                 fileCharge: item.fileCharge,
                 totalAmount: item.totalAmount,
