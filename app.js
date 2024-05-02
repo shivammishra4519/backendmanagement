@@ -32,7 +32,7 @@ connectToDB();
 const port = process.env.PORT || 4000;
 const app = express();
 const corsOptions = {
-    origin: 'http://mobilefinder.store', // Replace with your allowed origin
+    origin: 'https://mobilefinder.store', // Replace with your allowed origin
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 app.use(cors(corsOptions));
