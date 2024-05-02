@@ -441,11 +441,11 @@ const downloadGaurntorCondition = async (req, res) => {
 
 
         const url = process.env.frontEnd; // Define the front-end URL
-        // const browser = await puppeteer.launch({
-        //     executablePath: '/usr/bin/chromium-browser',
-        //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        // });
-        const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:false});
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:false});
         const page = await browser.newPage();
 
         try {
@@ -471,7 +471,7 @@ const downloadGaurntorCondition = async (req, res) => {
             res.status(500).json({ error: 'Error generating PDF' });
         } finally {
             // Close the browser
-            // await browser.close();
+            await browser.close();
         }
     } catch (error) {
         console.error('Internal server error:', error);
