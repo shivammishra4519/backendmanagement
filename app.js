@@ -60,7 +60,7 @@ app.use('/collection',dailyCollection);
 app.use('/guarantor',imgaeUpload)
 
 
-app.get('/', (req, res) => {
+app.get('/backend', (req, res) => {
     res.send('Welcome home api');
 });
 
