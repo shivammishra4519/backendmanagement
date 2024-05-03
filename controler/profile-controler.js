@@ -25,14 +25,14 @@ const getUserBytoken = async (req, res) => {
                 return res.status(400).json({ error: 'Unauthorized: Invalid token' });
             }
             const number = decodedToken.number;
-            const role=decodedToken.role;
+            const role = decodedToken.role;
             const db = getDB();
             const collection = db.collection('users');
             let result
-            if(role=='user'){
-                 result = await collection.findOne({ "number": number }, { projection: { name: 1, email: 1, role: 1, active: 1, number: 1,address:1, shopName:1,_id: 0 } });
-            }else{
-                 result = await collection.findOne({ "number": number }, { projection: { name: 1, email: 1, role: 1, active: 1, number: 1,address:1, _id: 0 } });
+            if (role == 'user') {
+                result = await collection.findOne({ "number": number }, { projection: { name: 1, email: 1, role: 1, active: 1, number: 1, address: 1, shopName: 1, _id: 0 } });
+            } else {
+                result = await collection.findOne({ "number": number }, { projection: { name: 1, email: 1, role: 1, active: 1, number: 1, address: 1, _id: 0 } });
             }
             if (!result) {
                 return res.status(400).json({ message: 'user not exit' })
@@ -218,7 +218,7 @@ const updateAddress = async (req, res) => {
             const db = getDB();
             const collection = db.collection('users');
             const number = decodedToken.number;
-            
+
             // Extracting address data from the request body
             const data = req.body;
 
@@ -243,4 +243,85 @@ const updateAddress = async (req, res) => {
 }
 
 
-module.exports = { getUserBytoken, changePassWord, changePin ,updateAddress}
+const checkOtherDEtails = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(400).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const db = getDB();
+            const collection = db.collection('users');
+            const number = decodedToken.number;
+            const result = await collection.findOne({ number: number }, { projection: { gstNumber: 1, adhar: 1, pan: 1, _id: 0 } });
+            console.log(result)
+            return res.status(200).json(result);
+        });
+    } catch (error) {
+        return res.status(500).json({ 'message': 'Internal server error' });
+    }
+}
+
+const updateOtherDetails = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(400).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const db = getDB();
+            const collection = db.collection('users');
+            const number=decodedToken.number;
+            const data = req.body;
+            const result = await collection.findOne({ number: number }, { projection: { gstNumber: 1, adhar: 1, pan: 1, _id: 0 } });
+            let upadte
+            if (true) {
+                // User data exists, update the existing document
+               upadte= await collection.updateOne(
+                    { number: number },
+                    {
+                        $set: {
+                            gstNumber: data.gstNumber,
+                            adhar: data.adhar,
+                            pan: data.pan
+                        }
+                    }
+                );
+            } else {
+                // User data doesn't exist, insert a new document
+              upadte=  await collection.insertOne({
+                    number: number,
+                    gstNumber: data.gstNumber,
+                    adhar: data.adhar,
+                    pan: data.pan
+                });
+            }
+console.log(upadte)
+            return res.status(200).json(upadte);
+        });
+    } catch (error) {
+        return res.status(500).json({ 'message': 'Internal server error' });
+    }
+}
+
+module.exports = { getUserBytoken, changePassWord, changePin, updateAddress, checkOtherDEtails,updateOtherDetails}

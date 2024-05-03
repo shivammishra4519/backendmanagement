@@ -87,8 +87,13 @@ const sellDevice = async (req, res) => {
             const transectionHistory = db.collection('transectiondetails');
             // transection of remaning amount of shopkeeper from admin  
             const amountCreaditToShop = data.mrp - data.downPayment;  // calulating amount 
-            const filterAdmin = { user_id: parseInt(adminId) };
+            const find=db.collection('users').find({role:'admin'},{projection: { number: 1, _id: 0 } });
+            if(!find){
+                return res.status(200).json({message:'Admin wallte not found'});
+            }
+            const filterAdmin = { user_id:find.number };
             const updateAdmin = { $inc: { amount: - amountCreaditToShop } };
+
             const adminWalet = await wallet.findOne(filterAdmin);
             if (adminWalet.amount < amountCreaditToShop) {
                 return res.status(400).json({ error: 'invalid request' })

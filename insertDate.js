@@ -1307,7 +1307,7 @@ async function insertDataInDB() {
             
             // Insert state and cities into the database
             const result = await db.collection('states').insertOne({ state, cities });
-           
+          
         }
         
    
