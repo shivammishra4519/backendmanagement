@@ -87,11 +87,16 @@ const sellDevice = async (req, res) => {
             const transectionHistory = db.collection('transectiondetails');
             // transection of remaning amount of shopkeeper from admin  
             const amountCreaditToShop = data.mrp - data.downPayment;  // calulating amount 
-            const find=db.collection('users').find({role:'admin'},{projection: { number: 1, _id: 0 } });
-            if(!find){
-                return res.status(200).json({message:'Admin wallte not found'});
+            const find = await db.collection('users').findOne({ role: 'admin' }, { projection: { number: 1, _id: 0 } });
+
+            if (!find) {
+                return res.status(200).json({ message: 'Admin wallet not found' });
             }
-            const filterAdmin = { user_id:find.number };
+
+            console.log(find);
+
+            console.log(find)
+            const filterAdmin = { user_id: find.number };
             const updateAdmin = { $inc: { amount: - amountCreaditToShop } };
 
             const adminWalet = await wallet.findOne(filterAdmin);
@@ -206,9 +211,9 @@ const sellDevice = async (req, res) => {
 
             const currentYear = new Date().getFullYear();
             const invoice = currentYear.toString() + lengthCol.toString();
-            data.invoice=invoice;
-            data.penality=0;
-          
+            data.invoice = invoice;
+            data.penality = 0;
+
             const isInsertResult = await collection.insertOne(data);
 
             if (!isInsertResult) {
@@ -220,13 +225,13 @@ const sellDevice = async (req, res) => {
                 await transectionHistory.deleteOne({ TransactionID: tid1 });
                 return res.status(400).json({ error: 'somtheing went wrong' })
             }
-            const resObj={
-                shopId:decodedToken.number,
+            const resObj = {
+                shopId: decodedToken.number,
                 loanId: loanId,
-                invoice:invoice
+                invoice: invoice
             }
-            
-            
+
+
             res.status(200).json(resObj)
 
         });
@@ -361,21 +366,21 @@ const viewDeviceList = async (req, res) => {
             if (err) {
                 return res.status(401).json({ message: 'Unauthorized: Invalid token' });
             }
-           
-           
+
+
             const db = getDB();
             const collection = db.collection('selldevice');
-            const role=decodedToken.role;
-            if(role=='admin' || role =='employee'){
+            const role = decodedToken.role;
+            if (role == 'admin' || role == 'employee') {
                 const result = await collection.find().toArray();
                 if (result) {
                     return res.status(200).json(result);
                 }
                 res.status(400).json({ message: 'data not found' })
             }
-            const shop=decodedToken.shop;
-        
-            const result = await collection.find({shop:shop}).toArray();
+            const shop = decodedToken.shop;
+
+            const result = await collection.find({ shop: shop }).toArray();
             if (result) {
                 return res.status(200).json(result);
             }
@@ -486,17 +491,17 @@ const viewAlldeviceSold = async (req, res) => {
 
             const db = getDB();
             const collection = db.collection('selldevice');
-            const role=decodedToken.role;
-            if(role=='admin' || role =='employee'){
+            const role = decodedToken.role;
+            if (role == 'admin' || role == 'employee') {
                 const result = await collection.find().toArray();
                 if (result) {
                     return res.status(200).json(result);
                 }
                 res.status(400).json({ message: 'data not found' })
             }
-            const shop=decodedToken.shop;
-        
-            const result = await collection.find({shop:shop}).toArray();
+            const shop = decodedToken.shop;
+
+            const result = await collection.find({ shop: shop }).toArray();
             if (result) {
                 return res.status(200).json(result);
             }
