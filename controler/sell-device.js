@@ -93,9 +93,7 @@ const sellDevice = async (req, res) => {
                 return res.status(200).json({ message: 'Admin wallet not found' });
             }
 
-            console.log(find);
-
-            console.log(find)
+          
             const filterAdmin = { user_id: find.number };
             const updateAdmin = { $inc: { amount: - amountCreaditToShop } };
 

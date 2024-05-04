@@ -217,14 +217,16 @@ const verifyCustomer = async (req, res) => {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
             const data = req.body;
+           
             const number = data.number;
             if (!number) {
                 return res.status(400).json({ message: 'Something went wrong' });
             }
             const db = getDB();
             const collection = db.collection('customers');
-            const customerData = await collection.findOne({ number: number });
-
+            
+            const customerData = await collection.findOne({ number: parseInt(number) });
+           
             if (!customerData) {
                 return res.status(404).json({ message: 'Customer not found' });
             }

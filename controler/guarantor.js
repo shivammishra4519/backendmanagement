@@ -169,9 +169,13 @@ const verifyGaurantor = async (req, res) => {
             }
             const db = getDB();
             const number = req.body.number;
-
+            const adhar=req.body.adhar;
             const collection = db.collection('guarantor');
-            const checkNumberIncustomer = await db.collection('customers').findOne({ number: parseInt(number) });
+            let checkNumberIncustomer
+            if(adhar){
+                checkNumberIncustomer = await db.collection('customers').findOne({ adhar: parseInt(adhar) });
+            }
+            checkNumberIncustomer = await db.collection('customers').findOne({ number: parseInt(number) });
             if (checkNumberIncustomer) {
                 return res.status(400).json({ message: 'Number Already exit in Customer' })
             }
