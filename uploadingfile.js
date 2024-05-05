@@ -64,7 +64,7 @@ router.post('/upload', upload.fields([
         await processImageUpload('adharCardImages');
         // Validate and process other document image
         await processImageUpload('otherDocumentImages');
-
+console.log(filenames)
         res.status(200).json({ filenames: filenames, message: 'Images uploaded successfully' });
     } catch (error) {
         console.error('Error uploading images:', error);
