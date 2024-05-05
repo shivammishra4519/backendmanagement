@@ -37,8 +37,6 @@ const app = express();
 // };
 // app.use(cors(corsOptions));
 app.use(cors());
-
-
 app.use(bodyParser.json({ extended: true }));
 app.use('/customer', customerRoute);
 app.use('/api', adminRoute); 
