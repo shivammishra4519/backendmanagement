@@ -25,12 +25,7 @@ const uploadSchema = Joi.object({
     buffer: Joi.binary()
 });
 
-router.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Set to '*' for any origin, or specify specific origins
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
+
 router.post('/upload', upload.fields([
     { name: 'profilePictures', maxCount: 1 },
     { name: 'panCardImages', maxCount: 1 },
