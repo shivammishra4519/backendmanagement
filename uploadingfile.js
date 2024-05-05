@@ -25,7 +25,12 @@ const uploadSchema = Joi.object({
     buffer: Joi.binary()
 });
 
-
+router.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Set to '*' for any origin, or specify specific origins
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
 router.post('/upload', upload.fields([
     { name: 'profilePictures', maxCount: 1 },
     { name: 'panCardImages', maxCount: 1 },
@@ -63,8 +68,7 @@ router.post('/upload', upload.fields([
         // Validate and process Adhar card image
         await processImageUpload('adharCardImages');
         // Validate and process other document image
-        await processImageUpload('otherDocumentImages');
-console.log(filenames)
+
         res.status(200).json({ filenames: filenames, message: 'Images uploaded successfully' });
     } catch (error) {
         console.error('Error uploading images:', error);
