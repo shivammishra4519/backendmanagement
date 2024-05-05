@@ -31,12 +31,12 @@ require('dotenv').config();
 connectToDB();
 const port = process.env.PORT || 4000;
 const app = express();
-const corsOptions = {
-    origin: 'https://mobilefinder.store', // Replace with your allowed origin
-    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
-app.use(cors(corsOptions));
-// app.use(cors());
+// const corsOptions = {
+//     origin: 'https://mobilefinder.store', // Replace with your allowed origin
+//     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+// };
+// app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json({ extended: true }));
 app.use('/customer', customerRoute);
 app.use('/api', adminRoute); 
