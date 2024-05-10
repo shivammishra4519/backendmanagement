@@ -5,3 +5,9 @@
 *.log
 # Ignore .env files
 .env
+
+# Ignore uploads folder
+/uploads
+
+# Ignore gaurantor folder
+/gaurantor

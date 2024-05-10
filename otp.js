@@ -26,9 +26,8 @@ router.post('/send-otp', async (req, res) => {
     // Check if OTP already exists for the number and delete it
     const existingOTP = await collection1.findOne({ number: dataFrom.number });
     if (existingOTP) {
-      await collection1.deleteOne({ number: dataFrom.number });
+      await collection1.deleteMany({ number: dataFrom.number });
     }
-
     // Find SMS template based on type
     const result = await collection.findOne({ smsType: dataFrom.type });
     if (!result) {
@@ -102,8 +101,6 @@ router.post('/send-otp', async (req, res) => {
       time: time,
       expireTime: '5' // Assuming you want to expire OTP after 5 minutes
     };
-
-
 
     const insertedId = await collection1.insertOne(otpObject);
     if (!insertedId) {

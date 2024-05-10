@@ -434,7 +434,7 @@ const filterData = async (req, res) => {
     }
 }
 
-const checkStatus = async (req, res) => {
+const viewAllLoansByCustomerId = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -454,7 +454,7 @@ const checkStatus = async (req, res) => {
             const data = req.body;
             const db = getDB();
             const collection = db.collection('selldevice');
-            const result = await collection.find({ number: data.number }).toArray();
+            const result = await collection.find({ customerNumber: data.number }).toArray();
             if (result) {
                 return res.status(200).josn(result)
             }
@@ -564,4 +564,4 @@ const filterDataByDate = async (req, res) => {
 
 
 
-module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData, viewAlldeviceSold, filterDataByDate }
+module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData, viewAlldeviceSold, filterDataByDate ,viewAllLoansByCustomerId}
