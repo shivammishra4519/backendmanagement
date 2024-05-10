@@ -9,5 +9,4 @@ router.post('/viewpaidemi',viewPaidEmi);
 router.post('/viewloan',findInstallmentByloanId); 
 router.post('/viewallemi',viewAllemi); 
 
-
 module.exports=router;
