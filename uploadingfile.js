@@ -81,11 +81,11 @@ router.post('/images/', async (req, res) => {
         }
 
         const imagePath = path.join(__dirname, 'uploads', imageName);
-        console.log('before',imagePath);
+       
         // Check if the image file exists
         if (fs.existsSync(imagePath)) {
             // Set appropriate content-type header
-            console.log('after',imagePath);
+           
             res.setHeader('Content-Type', 'image/png'); 
             res.sendFile(imagePath);
         } else {

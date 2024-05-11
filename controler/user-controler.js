@@ -157,7 +157,7 @@ const updateStatus = async (req, res) => {
 
 const walletCheckUser = async (req, res) => {
     try {
-       
+
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
@@ -175,18 +175,18 @@ const walletCheckUser = async (req, res) => {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
             const role = decodedToken.role;
-           
+
             if (role !== 'admin') {
                 return res.status(400).json({ message: 'Unauthorized: user' })
             }
             const data = req.body;
             const db = getDB();
             const collection = db.collection('wallets');
-           
+
             const amount = await collection.findOne({ user_id: data.number });
-            
-            if(!amount){
-                return res.status(400).json({message:'user not exit'})
+
+            if (!amount) {
+                return res.status(400).json({ message: 'user not exit' })
             }
             res.status(200).json(amount);
         });
@@ -194,4 +194,40 @@ const walletCheckUser = async (req, res) => {
         res.status(400).json(error);
     }
 }
-module.exports = { registerUser, getUser, getUserList, updateStatus ,walletCheckUser};
+
+const findShopByShopNameOrNumber = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+
+        const token = authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const db = getDB();
+            const collection = db.collection('users');
+            const data = req.body;
+            
+            const result = await collection.findOne({ shop: data.shop },{projection: {
+                number: 1, _id: 0
+            }});
+            
+            if(result){
+                return res.status(200).json(result)
+            }
+            res.status(400).json({message:'Shop not Found'})
+        });
+    } catch (error) {
+        res.status(400).json(error);
+    }
+}
+module.exports = { registerUser, getUser, getUserList, updateStatus, walletCheckUser ,findShopByShopNameOrNumber};
