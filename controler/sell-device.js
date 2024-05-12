@@ -561,7 +561,68 @@ const filterDataByDate = async (req, res) => {
     }
 }
 
+const filterNotPaidEmi = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            }
 
 
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        
+        try {
+            const result = await collection.aggregate([
+                {
+                    $addFields: {
+                        installmentsDueDates: {
+                            $map: {
+                                input: "$installments",
+                                as: "installment",
+                                in: {
+                                    $dateFromString: {
+                                        dateString: "$$installment.dueDate",
+                                        format: "%d-%m-%Y"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        $and: [
+                            { "installments.paid": false }, // At least one unpaid installment
+                            { "installmentsDueDates": { $lt: new Date() } } // Due date has passed
+                        ]
+                    }
+                }
+            ]).toArray();
+        
+          
+            res.status(200).json(result);
+        } catch (error) {
+            console.error("Error occurred during aggregation:", error);
+            res.status(500).json({ error: "An error occurred during aggregation" });
+        }
+        
 
-module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData, viewAlldeviceSold, filterDataByDate, viewAllLoansByCustomerId }
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+module.exports = { sellDevice, viewDeviceList, getCurrentDate, generateTransactionID, createTransactionHistroy, getCurrentTime, filterData, viewAlldeviceSold, filterDataByDate, viewAllLoansByCustomerId, filterNotPaidEmi }
