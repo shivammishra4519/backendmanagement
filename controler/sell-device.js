@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const key = process.env.secretkey;
 const adminId = process.env.admin;
-const adminstratorId = process.env.adminstrator;
+
 const { deviceDetails, sellDeviceDetails } = require('../model/add-device-model');
 const moment = require('moment');
 const crypto = require('crypto');

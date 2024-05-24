@@ -28,6 +28,7 @@ sellDeviceDetails=Joi.object({
     interest:Joi.number().required(),
     customerName:Joi.string().required(),
     gaurantorNumber:Joi.number().required(),
+    loanKey:Joi.string().required(),
 })
 
 module.exports={deviceDetails,sellDeviceDetails}

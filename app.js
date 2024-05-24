@@ -27,6 +27,8 @@ const imgaeUpload=require('./uploadsAndAPIS/gaurantor-images');
 const cors=require('cors');
 const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
+const lockunlock=require('./automode/lock-unlock');
+const appRoute=require('./route/app-routes');
 require('dotenv').config();
 connectToDB();
 const port = process.env.PORT || 4000;
@@ -38,6 +40,7 @@ const app = express();
 // app.use(cors(corsOptions));
 app.use(cors());
 app.use(bodyParser.json({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use('/customer', customerRoute);
 app.use('/api', adminRoute); 
 app.use('/api',image);
@@ -63,9 +66,10 @@ app.use('/profile',profile);
 app.use('/files',files);
 app.use('/collection',dailyCollection);
 app.use('/guarantor',imgaeUpload)
+app.use('/customer',appRoute)
 
 
-app.get('/backend', (req, res) => {
+app.get('/', (req, res) => {
     res.send('Welcome home api');
 });
 

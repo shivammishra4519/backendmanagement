@@ -8,7 +8,6 @@ const tokenExpiry = '12h'; // Token expiry set to 12 hours
 const login = async (req, res) => {
     try {
         const data = req.body;
-
         if (!data || !data.number || !data.password) {
             return res.status(400).json({ 'message': 'Bad request: userid and password required' });
         }
@@ -18,6 +17,23 @@ const login = async (req, res) => {
         const db = getDB();
         const collection = db.collection('users');
         const user = await collection.findOne({ number: number });
+        const customer = await db.collection('customers').findOne({ number: number });
+       
+        if (customer) {
+            const adhar = customer.adharCardNumber;
+            // console.log(typeof(adhar))
+            const lastFiveDigits = adhar.substring(adhar.length - 5);
+            // console.log("customer",lastFiveDigits)
+            if (!(data.password == lastFiveDigits)) {
+                return res.status(400).json({ 'message': 'incorret password' })
+            }
+            const payload = {
+                number: number,
+                role: customer,
+            };
+            const token = jwt.sign(payload, key, { expiresIn: tokenExpiry });
+            return res.status(200).json({ token });
+        }
 
         if (!user) {
             return res.status(400).json({ 'message': 'Invalid mobile number' });
@@ -113,7 +129,7 @@ const fundTransferByadmin = async (req, res) => {
 const fundReciveByadmin = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
-       
+
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
@@ -177,4 +193,6 @@ const findAdminId = async (req, res) => {
 }
 
 
-module.exports = { login, veirfyToken, fundTransferByadmin, fundReciveByadmin,findAdminId };
+
+
+module.exports = { login, veirfyToken, fundTransferByadmin, fundReciveByadmin, findAdminId };

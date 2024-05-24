@@ -1,6 +1,9 @@
 const { getDB } = require('../dbconnection');
 const jwt = require('jsonwebtoken');
 const { generateTransactionID, createTransactionHistroy } = require('../controler/sell-device')
+const axios = require('axios');
+
+const url = process.env.zte;
 // const bcrypt = require('bcrypt');
 require('dotenv').config();
 const key = process.env.secretkey;
@@ -227,9 +230,9 @@ const payInstallment = async (req, res) => {
                     user_id: decodedToken.number,
                     amount: data.amount
                 };
-                
+
                 const find = await dailyCollection.findOne({ user_id: decodedToken.number });
-                
+
                 if (!find) {
                     // If user does not exist, insert a new document
                     await dailyCollection.insertOne(obj);
@@ -238,14 +241,21 @@ const payInstallment = async (req, res) => {
                     const newAmount = find.amount + data.amount;
                     await dailyCollection.updateOne(
                         { user_id: decodedToken.number },
-                        {$inc: { amount: data.amount } }
+                        { $inc: { amount: data.amount } }
                     );
                 }
-                
+
 
             }
+
             if (!createAdminTransaction)
                 return res.status(400).json({ message: 'Failed to record admin transaction' });
+
+            const zteKey = await emiCollection.findOne({ loanId: data.loan_Id });
+        if (zteKey.loanKey) {
+            const lockStatus = await lockDevice(zteKey.loanKey);
+            console.log("Lock status", lockStatus);
+        }
 
             res.status(200).json({ message: 'EMI paid successfully' });
         });
@@ -388,6 +398,33 @@ function getCurrentDate() {
     const year = currentDate.getFullYear();
     return `${day}-${month}-${year}`;
 }
+
+
+
+
+const lockDevice = async (key) => {
+    const headers = {
+        'Accept': '*/*',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Cookie': 'PHPSESSID=bq8b53su087ao76vsft79778k6',
+        'Referer': 'https://ztesolutions.com/adminpanel/viewCustomersDetails.php?ozoCode=11SKYCCMKE',
+        'User-Agent': 'Mozilla/5.0'
+    };
+
+    const formData = new URLSearchParams({
+        'ozoCode': key,
+        'theStatus': '0'
+    }).toString();
+
+    try {
+        const response = await axios.post(url, formData, { headers });
+        console.log('Device unlocked successfully:', response.data);
+        return 1;
+    } catch (error) {
+        console.error('Error locking device:', error);
+        return 0;
+    }
+};
 
 module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi }
 
