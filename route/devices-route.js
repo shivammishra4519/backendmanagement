@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {addDevice,brandNames,deviceData,viewAllDevice,viewDeviceByCustomerId,deleteDevice,updateDevice}=require('../controler/add-device')
-const {sellDevice,viewDeviceList,filterData,viewAlldeviceSold,filterDataByDate,viewAllLoansByCustomerId,filterNotPaidEmi}=require('../controler/sell-device')
+const {sellDevice,viewDeviceList,filterData,viewAlldeviceSold,filterDataByDate,viewAllLoansByCustomerId,filterNotPaidEmi,sellDeviceManual}=require('../controler/sell-device')
 
 
 
@@ -19,6 +19,7 @@ router.post('/viewalldevicesold',viewAlldeviceSold);
 router.post('/filter/device',filterDataByDate);
 router.post('/view/all/loans',viewAllLoansByCustomerId);
 router.post('/view/all/emi/notpaid',filterNotPaidEmi);
+router.post('/selldevice/manual',filterNotPaidEmi);
 
 
 module.exports = router;

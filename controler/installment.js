@@ -73,6 +73,8 @@ const payInstallment = async (req, res) => {
             if (role == 'admin') {
                 return res.status(400).json({ message: 'invalid request' })
             }
+
+
             const balanceCheck = await wallet.findOne({ user_id: employeId });
             if (!balanceCheck)
                 return res.status(400).json({ message: 'Something went wrong with employer balance check' });
@@ -96,6 +98,7 @@ const payInstallment = async (req, res) => {
 
             if (!(customerCheck.credit >= data.amount))
                 return res.status(400).json({ message: 'No credit amount available for the customer' });
+
 
             const filter = {
                 loanId: data.loan_Id,
@@ -252,10 +255,10 @@ const payInstallment = async (req, res) => {
                 return res.status(400).json({ message: 'Failed to record admin transaction' });
 
             const zteKey = await emiCollection.findOne({ loanId: data.loan_Id });
-        if (zteKey.loanKey) {
-            const lockStatus = await lockDevice(zteKey.loanKey);
-            console.log("Lock status", lockStatus);
-        }
+            if (zteKey.loanKey) {
+                const lockStatus = await lockDevice(zteKey.loanKey);
+                console.log("Lock status", lockStatus);
+            }
 
             res.status(200).json({ message: 'EMI paid successfully' });
         });
@@ -426,7 +429,40 @@ const lockDevice = async (key) => {
     }
 };
 
-module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi }
+const viewPaidEmiForAdmin = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader)
+            return res.status(401).json({ message: 'Unauthorized: Authorization header missing' });
+
+        const token = authHeader.split(' ')[1];
+        if (!token)
+            return res.status(401).json({ message: 'Unauthorized: Token missing' });
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            }
+            const number = decodedToken.number;
+            const role = decodedToken.role;
+            const db = getDB();
+            const collection = db.collection('emiPaidHistory');
+            if (!role == 'admin') {
+                return res.status(400).json({ message: 'Unauthorized:  Request' })
+            }
+            const result = await collection.find().toArray();
+            
+            res.status(200).json(result)
+
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi,viewPaidEmiForAdmin }
 
 
 

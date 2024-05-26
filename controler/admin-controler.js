@@ -50,6 +50,7 @@ const login = async (req, res) => {
         const payload = {
             number: number,
             role: user.role,
+            name:user.name
         };
 
         if (user.shopName) {
