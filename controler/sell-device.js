@@ -627,86 +627,73 @@ const filterNotPaidEmi = async (req, res) => {
 
 
 
-
 const sellDeviceManual = async (req, res) => {
     try {
         const data = req.body;
-        const validationError = sellDeviceDetails.validate(data);
-        if (validationError.error) {
-            return res.status(400).json({ message: validationError.error.message });
+        
+
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const query = {
+            "$or": [
+                { imei1: data.imei1 },
+                { imei2: data.imei2 },
+            ]
+        }
+        const result = await collection.findOne(query);
+
+        if (result) {
+            return res.status(400).json({ message: 'Device already sold' });
         }
 
-       
+        // checking user 
+        const number = data.customerNumber;
+        const isCustomerExist = await db.collection('customers').findOne({ number: parseInt(number) });
+        if (!isCustomerExist) {
+            return res.status(400).json({ message: 'Customer does not exist' });
+        }
 
-            const db = getDB();
-            const collection = db.collection('selldevice');
-            const query = {
-                "$or": [
-                    { imei1: data.imei1 },
-                    { imei2: data.imei2 },
-                ]
-            }
-            const result = await collection.findOne(query);
+        const totalInstallments = parseInt(data.emi); // Total number of installments
+        const installmentAmount = data.emiAmount;
+        const installments = generateInstallments(totalInstallments, installmentAmount);
+        const loanId = generateUniqueReadableNumber();
+        data.loanId = loanId;
+        data.installments = installments;
+        data.purchaseDate = getCurrentDate();
+        data.currentCredit = data.financeAmount;
 
-            if (result) {
-                return res.status(400).json({ message: 'Device already sold' });
-            }
+        // first transaction admin to customer 
+        const loanWallet = db.collection('loanwallets');
+        const objwallet = {
+            loanId: loanId,
+            credit: data.financeAmount
+        }
 
-            // checking user 
-            const number = data.customerNumber;
-            const iSCustomerExit = await db.collection('customers').findOne({ number: parseInt(number) });
-            if (!iSCustomerExit) {
-                return res.status(400).json({ message: 'customer not exit' })
-            }
+        const check = await loanWallet.findOne({ loanId: loanId });
+        if (check) {
+            return res.status(400).json({ error: 'Something went wrong with loanId' });
+        }
+        const insertIdWallet = await loanWallet.insertOne(objwallet);
+        if (!insertIdWallet) {
+            return res.status(400).json({ error: 'Database error' });
+        }
 
-            const totalInstallments = parseInt(data.emi); // Total number of installments
-            const installmentAmount = data.emiAmount;
-            const installments = generateInstallments(totalInstallments, installmentAmount);
-            const loanId = generateUniqueReadableNumber();
-            data.loanId = loanId;
-            data.installments = installments;
-            data.purchaseDate = getCurrentDate();
-            data.time = getCurrentTime();
-            data.shop = decodedToken.shop;
-            data.currentCredit = data.financeAmount;
+        const currentYear = new Date().getFullYear();
+        const lengthCol = await collection.countDocuments();
+        const invoice = currentYear.toString() + lengthCol.toString();
+        data.invoice = invoice;
+        data.penality = 0;
 
+        const isInsertResult = await collection.insertOne(data);
 
+        const resObj = {
+         // Assuming req.user contains the decoded token
+            loanId: loanId,
+            invoice: invoice
+        }
 
-            // first transection admin to customer 
-            const loanWallet = db.collection('loanwallets');
-            const objwallet = {
-                loanId: loanId,
-                credit: data.financeAmount
-            }
+        res.status(200).json(resObj);
 
-            const check = await loanWallet.findOne({ loanId: loanId });
-            if (check) {
-                return res.status(400).josn({ error: 'somtheing went wrong loanId' });
-            }
-            const insertIdWallet = await loanWallet.insertOne(objwallet);
-            if (!insertIdWallet) {
-                return res.status(400).json({ error: 'database error' })
-            };
-
-
-            
-            const invoice = currentYear.toString() + lengthCol.toString();
-            data.invoice = invoice;
-            data.penality = 0;
-
-            const isInsertResult = await collection.insertOne(data);
-
-           
-            const resObj = {
-                shopId: decodedToken.number,
-                loanId: loanId,
-                invoice: invoice
-            }
-
-
-            res.status(200).json(resObj)
-
-       
     } catch (error) {
         return res.status(400).json({ message: error.message });
     }

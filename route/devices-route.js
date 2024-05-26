@@ -19,7 +19,7 @@ router.post('/viewalldevicesold',viewAlldeviceSold);
 router.post('/filter/device',filterDataByDate);
 router.post('/view/all/loans',viewAllLoansByCustomerId);
 router.post('/view/all/emi/notpaid',filterNotPaidEmi);
-router.post('/selldevice/manual',filterNotPaidEmi);
+router.post('/selldevice/manual',sellDeviceManual);
 
 
 module.exports = router;
