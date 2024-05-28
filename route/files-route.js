@@ -2,7 +2,7 @@ const {exportDataInExcel,allCreadit,unpaidEmiToexcel}=require('../controler/expo
 const express = require('express');
 const router = express.Router();
 
-router.get('/download',exportDataInExcel);
+router.post('/download',exportDataInExcel);
 router.get('/view/filter',allCreadit);
 router.get('/download/unpaidemi',unpaidEmiToexcel);
 

@@ -108,26 +108,77 @@ const exportDataInExcel = async (req, res) => {
 
             const db = getDB();
             const collection = db.collection('selldevice');
+
             const collection1 = db.collection('dummy');
             await collection1.deleteMany({});
 
-            const role = decodedToken.role;
             let result;
+            const { from, to } = req.body;
+            let dateFilter = {};
 
-            if (role == 'admin' || role == 'employee') {
-                result = await collection.find().toArray();
+            if (from && to) {
+                // Parse the dates from the request body
+                const fromDate = new Date(from);
+                const toDate = new Date(to);
+                toDate.setHours(23, 59, 59, 999); // Include the whole 'to' day
+
+                dateFilter = {
+                    purchaseDate: {
+                        $gte: fromDate,
+                        $lte: toDate
+                    }
+                };
+            }
+
+            if (decodedToken.role == 'admin' || decodedToken.role == 'employee') {
+                result = await collection.aggregate([
+                    {
+                        $addFields: {
+                            purchaseDate: {
+                                $dateFromString: {
+                                    dateString: '$purchaseDate',
+                                    format: '%d-%m-%Y'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $match: dateFilter
+                    }
+                ]).toArray();
             } else {
                 const shop = decodedToken.shop;
-                result = await collection.find({ shop: shop }).toArray();
+                result = await collection.aggregate([
+                    {
+                        $addFields: {
+                            purchaseDate: {
+                                $dateFromString: {
+                                    dateString: '$purchaseDate',
+                                    format: '%d-%m-%Y'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $match: {
+                            ...dateFilter,
+                            shop: shop
+                        }
+                    }
+                ]).toArray();
+            }
+
+            if (result.length === 0) {
+                return res.status(404).json({ error: 'No records found for the given criteria' });
             }
 
             const documents = result.map(item => ({
-                Date: item.purchaseDate,
+                Date: item.purchaseDate.toISOString().split('T')[0], // Format date as 'YYYY-MM-DD'
                 loanId: item.loanId,
                 IMEI: parseInt(item.imei1),
-                Name:item.customerName ||'Na',
+                Name: item.customerName || 'Na',
                 brandName: item.brandName,
-                modelName: item.modelName ,
+                modelName: item.modelName,
                 shop: item.shop,
                 mrp: item.mrp,
                 fileCharge: item.fileCharge,
@@ -139,54 +190,54 @@ const exportDataInExcel = async (req, res) => {
                 emiAmount: item.emiAmount,
                 customerNumber: item.customerNumber,
                 interest: item.interest,
-                '1EMi': item.installments[0].amount,
-                date1: item.installments[0].payDate,
-                '2EMi': item.installments[1].amount,
-                date2: item.installments[1].payDate,
-                '3EMi': item.installments[2] ? item.installments[2].amount : '',
-                date3: item.installments[2] ? item.installments[2].payDate : '',
-                '4EMi': item.installments[3] ? item.installments[3].amount : '',
-                date4: item.installments[3] ? item.installments[3].payDate : '',
-                '5EMi': item.installments[4] ? item.installments[4].amount : '',
-                date5: item.installments[4] ? item.installments[4].payDate : '',
+                '1EMi': item.installments[0]?.amount || '',
+                date1: item.installments[0]?.payDate || '',
+                '2EMi': item.installments[1]?.amount || '',
+                date2: item.installments[1]?.payDate || '',
+                '3EMi': item.installments[2]?.amount || '',
+                date3: item.installments[2]?.payDate || '',
+                '4EMi': item.installments[3]?.amount || '',
+                date4: item.installments[3]?.payDate || '',
+                '5EMi': item.installments[4]?.amount || '',
+                date5: item.installments[4]?.payDate || '',
                 currentCredit: item.currentCredit || '',
             }));
 
             const workbook = new Excel.Workbook();
             const worksheet = workbook.addWorksheet('Sheet1');
 
-            // Write headers to Excel worksheet (based on the mainFields object)
+            // Write headers to Excel worksheet
             const headers = Object.keys(documents[0]);
             worksheet.addRow(headers);
 
-            // Apply border to all rows
-            worksheet.eachRow((row, rowNumber) => {
-                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                    cell.border = {
-                        top: { style: 'thin', color: { argb: '000000' } }, // Black color
-                        left: { style: 'thin', color: { argb: '000000' } }, // Black color
-                        bottom: { style: 'thin', color: { argb: '000000' } }, // Black color
-                        right: { style: 'thin', color: { argb: '000000' } } // Black color
-                    };
-                });
-            });
-            
-            // Apply background color and uppercase property to the first row
+            // Apply border and background color to header row
             const firstRow = worksheet.getRow(1);
             firstRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: '000000' } },
+                    left: { style: 'thin', color: { argb: '000000' } },
+                    bottom: { style: 'thin', color: { argb: '000000' } },
+                    right: { style: 'thin', color: { argb: '000000' } }
+                };
                 cell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: 'FFFF00' } // Yellow background color
+                    fgColor: { argb: 'FFFF00' }
                 };
-                cell.value = cell.value ? cell.value.toUpperCase() : '';
+                cell.value = cell.value.toUpperCase();
             });
-            
-            
 
-            // Write each document to Excel worksheet
+            // Write data rows to Excel worksheet
             documents.forEach(doc => {
-                worksheet.addRow(Object.values(doc));
+                const row = worksheet.addRow(Object.values(doc));
+                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: '000000' } },
+                        left: { style: 'thin', color: { argb: '000000' } },
+                        bottom: { style: 'thin', color: { argb: '000000' } },
+                        right: { style: 'thin', color: { argb: '000000' } }
+                    };
+                });
             });
 
             // Create a buffer containing the Excel data
@@ -204,6 +255,8 @@ const exportDataInExcel = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
 
 
 

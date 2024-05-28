@@ -648,9 +648,9 @@ const sellDeviceManual = async (req, res) => {
 
         // checking user 
         const number = data.customerNumber;
-        console.log(",number",number)
+     
         const isCustomerExist = await db.collection('customers').findOne({ number: parseInt(number) });
-        console.log(",isCustomerExist",isCustomerExist)
+       
         if (!isCustomerExist) {
             return res.status(400).json({ message: 'Customer does not exist' });
         }
