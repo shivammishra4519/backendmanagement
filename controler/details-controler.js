@@ -299,11 +299,9 @@ const allEmployeeWallet = async (req, res) => {
               
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
-
             const db = getDB();
             const collection = db.collection('users');
             const walletCollection = db.collection('wallets');
-
             // Fetch numbers of all users
             const usersResult = await collection.find({role:'employee'}, { projection: { number: 1, _id: 0 } }).toArray();
             const numbers = usersResult.map(user => user.number);
@@ -361,5 +359,159 @@ const totalFileCharge = async (req, res) => {
 }
 
 
+const totalFileChargeCurrentMonth = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
 
-module.exports = { viewDetailsCustomer, viewRegisterDevices, viewSoldDevices, viewShops, viewEmployees, allCreadit,allUsersWallet,allEmployeeWallet,totalFileCharge }
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+
+            const db = getDB();
+            const collection = db.collection('selldevice');
+
+            // Get the current date
+            const currentDate = new Date();
+
+            // Get the first and last day of the current month
+            const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+            // Set the last day to the end of the day
+            lastDayOfMonth.setHours(23, 59, 59, 999);
+
+            // Construct date filter for the current month
+            const dateFilter = {
+                purchaseDate: {
+                    $gte: firstDayOfMonth,
+                    $lte: lastDayOfMonth
+                }
+            };
+
+            // Fetch numbers of all users filtered by current month
+            const loans = await collection.aggregate([
+                {
+                    $addFields: {
+                        purchaseDate: {
+                            $dateFromString: {
+                                dateString: '$purchaseDate',
+                                format: '%d-%m-%Y'
+                            }
+                        }
+                    }
+                },
+                {
+                    $match: dateFilter
+                },
+                {
+                    $project: {
+                        fileCharge: 1,
+                        purchaseDate: 1,
+                        _id: 0
+                    }
+                }
+            ]).toArray();
+
+         
+
+            // Calculate the sum of all file charges
+            const totalAmount = loans.reduce((sum, loan) => sum + loan.fileCharge, 0);
+
+            return res.status(200).json({ totalAmount });
+        });
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+
+const currentCreditCurrentmonth = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+
+            const db = getDB();
+            const collection = db.collection('selldevice');
+
+            // Get the current date
+            const currentDate = new Date();
+
+            // Get the first and last day of the current month
+            const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+            // Set the last day to the end of the day
+            lastDayOfMonth.setHours(23, 59, 59, 999);
+
+            // Construct date filter for the current month
+            const dateFilter = {
+                purchaseDate: {
+                    $gte: firstDayOfMonth,
+                    $lte: lastDayOfMonth
+                }
+            };
+
+            // Fetch numbers of all users filtered by current month
+            const loans = await collection.aggregate([
+                {
+                    $addFields: {
+                        purchaseDate: {
+                            $dateFromString: {
+                                dateString: '$purchaseDate',
+                                format: '%d-%m-%Y'
+                            }
+                        }
+                    }
+                },
+                {
+                    $match: dateFilter
+                },
+                {
+                    $project: {
+                        currentCredit: 1,
+                        purchaseDate: 1,
+                        _id: 0
+                    }
+                }
+            ]).toArray();
+
+         
+
+            // Calculate the sum of all file charges
+            const totalAmount = loans.reduce((sum, loan) => sum + loan.currentCredit, 0);
+
+            return res.status(200).json({ totalAmount });
+        });
+
+    } catch (error) {
+        console.error('Internal server error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+module.exports = { viewDetailsCustomer, viewRegisterDevices, viewSoldDevices, viewShops, viewEmployees, allCreadit,allUsersWallet,allEmployeeWallet,totalFileCharge ,totalFileChargeCurrentMonth,currentCreditCurrentmonth}
