@@ -574,7 +574,9 @@ const updateInstallmentPayOnline = async (req, res) => {
         const installments = isAlreadyPaid.installments;
         const obj = installments.find(installment => installment.installmentId === result.remark2);
         const paid = obj.paid;
+
         if (paid) {
+            console.log(data)
             return res.status(400).json({ message: 'EMI already paid' });
         }
 
@@ -635,13 +637,14 @@ const updateInstallmentPayOnline = async (req, res) => {
         await emiPaidCollection.insertOne(paymentFormData);
         console.log(amount, typeof (amount))
         // Update current credit
-        await emiCollection.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { currentCredit: -amount } });
-
-        // Lock device if applicable
-        const zteKey = await emiCollection.findOne({ loanId: loanDetails.loanId });
-        if (zteKey.loanKey) {
-            const lockStatus = await lockDevice(zteKey.loanKey);
+        const res1 = await emiCollection.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { currentCredit: -amount } });
+        if (res1) {
+            const zteKey = await emiCollection.findOne({ loanId: loanDetails.loanId });
+            if (zteKey.loanKey) {
+                const lockStatus = await lockDevice(zteKey.loanKey);
+            }
         }
+
 
         res.status(200).json({ message: 'EMI paid successfully' });
 

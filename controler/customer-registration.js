@@ -305,7 +305,7 @@ const findCustomerByManyId = async (req, res) => {
     try {
         const { userInput } = req.body;
 
-        console.log("sss",req.body)
+      
 
         if (!userInput) {
             return res.status(400).json({ message: 'No search value found' });
