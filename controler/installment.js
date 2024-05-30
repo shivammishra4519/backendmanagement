@@ -533,16 +533,17 @@ const payInstallmentOnline = async (req, res) => {
 
 const updateInstallmentPayOnline = async (req, res) => {
     try {
+
         const db = getDB();
         const collection = db.collection('onlinePayments');
         const wallet = db.collection('wallets');
         const usersCollection = db.collection('users');
         const emiCollection = db.collection('selldevice');
         const loanWallet = db.collection('loanwallets');
-        
-        const data = req.body;
 
+        const data = req.body;
         // Check if order status is completed
+
         const response = await checkOrderStatus(data.order_id);
         if (!response.status == 'COMPLETED') {
             return res.status(400).json({ message: 'Payment not received' });
@@ -563,16 +564,24 @@ const updateInstallmentPayOnline = async (req, res) => {
         // Check if installment is already paid
         const isAlreadyPaid = await emiCollection.findOne({
             loanId: loanDetails.loanId,
-            "installments.installmentId": response.remark2
+            "installments.installmentId": result.remark2
         });
+
+
         if (!isAlreadyPaid) {
             return res.status(400).json({ message: 'Invalid loan ID or installment ID' });
+        }
+        const installments = isAlreadyPaid.installments;
+        const obj = installments.find(installment => installment.installmentId === result.remark2);
+        const paid = obj.paid;
+        if (paid) {
+            return res.status(400).json({ message: 'EMI already paid' });
         }
 
         // Update installment payment status
         const filter = {
             loanId: loanDetails.loanId,
-            "installments.installmentId": response.remark2
+            "installments.installmentId": result.remark2
         };
         const update = {
             $set: {
@@ -580,14 +589,15 @@ const updateInstallmentPayOnline = async (req, res) => {
                 "installments.$[elem].payDate": new Date()
             }
         };
+
         const options = {
-            arrayFilters: [{ "elem.installmentId": response.remark2 }],
+            arrayFilters: [{ "elem.installmentId": result.remark2 }],
             returnOriginal: false
         };
         const updatedEmi = await emiCollection.findOneAndUpdate(filter, update, options);
 
         // Update loan and wallet balances
-        const amount = parseInt(response.amount);
+        const amount = parseInt(result.amount);
         await loanWallet.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { credit: -amount } });
         await wallet.findOneAndUpdate({ user_id: loanDetails.customerNumber }, { $inc: { amount } });
 
@@ -606,6 +616,7 @@ const updateInstallmentPayOnline = async (req, res) => {
         const adminTransactionInfo = {
             // transaction details...
         };
+        const transactionHistory = db.collection('emipaidhistory');
         await transactionHistory.insertOne(adminTransactionInfo);
 
         // Record EMI paid history
@@ -620,18 +631,20 @@ const updateInstallmentPayOnline = async (req, res) => {
             date: new Date(),
             time: new Date()
         };
+        const emiPaidCollection = db.collection('emiPaidHistory');
         await emiPaidCollection.insertOne(paymentFormData);
-
+        console.log(amount, typeof (amount))
         // Update current credit
         await emiCollection.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { currentCredit: -amount } });
 
         // Lock device if applicable
-        const zteKey = await emiCollection.findOne({ loanId: data.loan_Id });
+        const zteKey = await emiCollection.findOne({ loanId: loanDetails.loanId });
         if (zteKey.loanKey) {
             const lockStatus = await lockDevice(zteKey.loanKey);
         }
 
         res.status(200).json({ message: 'EMI paid successfully' });
+
 
     } catch (error) {
         console.error('Error:', error);
@@ -664,7 +677,7 @@ async function checkOrderStatus(order_id) {
 
 
 
-module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi, viewPaidEmiForAdmin, payInstallmentOnline }
+module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi, viewPaidEmiForAdmin, payInstallmentOnline, updateInstallmentPayOnline }
 
 
 
