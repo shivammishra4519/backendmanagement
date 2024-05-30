@@ -228,7 +228,7 @@ const allCreadit = async (req, res) => {
         }).toArray();
 
         // Calculate the sum of all credits
-        const totalCredit = result.reduce((sum, item) => sum + item.credit, 0);
+        const totalCredit = result.reduce((sum, item) => sum + item.currentCredit, 0);
 
         res.status(200).json({ totalCredit });
 
