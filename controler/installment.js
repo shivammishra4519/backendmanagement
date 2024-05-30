@@ -479,9 +479,6 @@ const payInstallmentOnline = async (req, res) => {
         const axios = require('axios');
         const ordId = '123456' + Date.now();
         const dataToSend = {
-            loanId: data.loanId,
-            installmentId: data.installmentId,
-            amount: result.emiAmount,
             order_id: ordId,
         };
 
@@ -500,24 +497,31 @@ const payInstallmentOnline = async (req, res) => {
 
         const response = await axios.post(url, data1);
 
+
         const responseString = response.data;
-        
+
+        const onlinePaymentCollection = db.collection('onlinePayments');
 
         // Extract JSON part from the response string
         const parts = responseString.split(')'); // Assuming the response ends with a closing parenthesis ')'
         const jsonString = parts[parts.length - 1].trim(); // Get the last part and trim whitespace
-        
+
         try {
             const jsonResponse = JSON.parse(jsonString);
             const paymentUrl = jsonResponse.result.payment_url;
-
+            const insertDetails = await onlinePaymentCollection.findOne({ order_id: data1.order_id });
+            if (insertDetails) {
+                return res.status(400).json({ message: 'Order Id already exit' })
+            }
+            data1.date = new Date()
+            await onlinePaymentCollection.insertOne(data1);
             res.status(200).json({ status: true, paymentUrl });
         } catch (error) {
-           
+
             res.status(500).json({ status: false, message: 'Failed to parse JSON response' });
         }
     } catch (error) {
-     
+
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -527,7 +531,133 @@ const payInstallmentOnline = async (req, res) => {
 
 
 
+const updateInstallmentPayOnline = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('onlinePayments');
+        const wallet = db.collection('wallets');
+        const usersCollection = db.collection('users');
+        const emiCollection = db.collection('selldevice');
+        const loanWallet = db.collection('loanwallets');
+        
+        const data = req.body;
 
+        // Check if order status is completed
+        const response = await checkOrderStatus(data.order_id);
+        if (!response.status == 'COMPLETED') {
+            return res.status(400).json({ message: 'Payment not received' });
+        }
+
+        // Find payment record
+        const result = await collection.findOne({ order_id: data.order_id });
+        if (!result) {
+            return res.status(400).json({ message: 'Invalid OrderId' });
+        }
+
+        // Find loan details
+        const loanDetails = await emiCollection.findOne({ loanId: result.remark1 });
+        if (!loanDetails) {
+            return res.status(400).json({ message: 'Invalid loan request: loan not found' });
+        }
+
+        // Check if installment is already paid
+        const isAlreadyPaid = await emiCollection.findOne({
+            loanId: loanDetails.loanId,
+            "installments.installmentId": response.remark2
+        });
+        if (!isAlreadyPaid) {
+            return res.status(400).json({ message: 'Invalid loan ID or installment ID' });
+        }
+
+        // Update installment payment status
+        const filter = {
+            loanId: loanDetails.loanId,
+            "installments.installmentId": response.remark2
+        };
+        const update = {
+            $set: {
+                "installments.$[elem].paid": true,
+                "installments.$[elem].payDate": new Date()
+            }
+        };
+        const options = {
+            arrayFilters: [{ "elem.installmentId": response.remark2 }],
+            returnOriginal: false
+        };
+        const updatedEmi = await emiCollection.findOneAndUpdate(filter, update, options);
+
+        // Update loan and wallet balances
+        const amount = parseInt(response.amount);
+        await loanWallet.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { credit: -amount } });
+        await wallet.findOneAndUpdate({ user_id: loanDetails.customerNumber }, { $inc: { amount } });
+
+        // Record transaction history
+        const adminId = await usersCollection.findOne({ role: 'admin' });
+        if (!adminId) {
+            return res.status(400).json({ message: 'Technical issue' });
+        }
+        const adminWallet = await wallet.findOne({ user_id: adminId.number });
+        const adminOpening = adminWallet.amount;
+        const adminUpdate = { $inc: { amount: amount } };
+        await wallet.findOneAndUpdate({ user_id: adminId.number }, adminUpdate);
+
+        // Record transaction history
+        const adminClosing = (await wallet.findOne({ user_id: adminId.number })).amount;
+        const adminTransactionInfo = {
+            // transaction details...
+        };
+        await transactionHistory.insertOne(adminTransactionInfo);
+
+        // Record EMI paid history
+        const paymentFormData = {
+            user_id: loanDetails.customerNumber,
+            loan_Id: loanDetails.loanId,
+            installmentId: response.remark2,
+            utr: data.order_id,
+            paymentBy: 'self',
+            paymentMod: 'Online',
+            amount: amount,
+            date: new Date(),
+            time: new Date()
+        };
+        await emiPaidCollection.insertOne(paymentFormData);
+
+        // Update current credit
+        await emiCollection.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { currentCredit: -amount } });
+
+        // Lock device if applicable
+        const zteKey = await emiCollection.findOne({ loanId: data.loan_Id });
+        if (zteKey.loanKey) {
+            const lockStatus = await lockDevice(zteKey.loanKey);
+        }
+
+        res.status(200).json({ message: 'EMI paid successfully' });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+
+
+
+async function checkOrderStatus(order_id) {
+    const url = 'https://mobilefinder.store/api/check-order-status';
+    const data1 = {
+        "user_token": "099f942cc0163b93025ed62655f4aed1",
+        "order_id": order_id
+    };
+
+    try {
+        const response = await axios.post(url, data1);
+        const responseString = response.data;
+        return responseString
+    } catch (error) {
+        console.error('Error occurred while making the request:', error);
+    }
+}
 
 
 

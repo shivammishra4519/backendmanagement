@@ -7,7 +7,7 @@ const environment = {
     campaign:'13393',
     routeid:'30',
     type:'text',
-    senderid:'OMTRDE',
+    senderid:'UMFSSF',
     pe_id:'1201163058752081861',
     adharApiUrl:'https://planapi.in/Api/Ekyc/AdharVerification',
     
