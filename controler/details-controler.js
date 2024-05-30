@@ -220,10 +220,10 @@ const allCreadit = async (req, res) => {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
         const db = getDB();
-        const collection = db.collection('loanwallets');
+        const collection = db.collection('selldevice');
         const result = await collection.find({}, {
             projection: {
-                credit: 1, _id: 0
+                currentCredit: 1, _id: 0
             }
         }).toArray();
 
@@ -503,7 +503,6 @@ const currentCreditCurrentmonth = async (req, res) => {
 
             // Calculate the sum of all file charges
             const totalAmount = loans.reduce((sum, loan) => sum + loan.currentCredit, 0);
-
             return res.status(200).json({ totalAmount });
         });
 

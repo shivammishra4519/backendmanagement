@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {customerRegister,customerList,viewAllData,filterCustomer,verifyCustomer,isCustomerPresent,viewCustomerImageName}=require('../controler/customer-registration')
+const {customerRegister,customerList,viewAllData,filterCustomer,verifyCustomer,isCustomerPresent,viewCustomerImageName,findCustomerByManyId}=require('../controler/customer-registration')
 
 
 router.post('/register',customerRegister);
@@ -10,6 +10,7 @@ router.post('/filter',filterCustomer);
 router.post('/verify',verifyCustomer);
 router.post('/check/customer',isCustomerPresent);
 router.post('/view/image',viewCustomerImageName);
+router.post('/View/loan',findCustomerByManyId);
 
 
 module.exports = router;

@@ -2,7 +2,8 @@ const { getDB } = require('../dbconnection');
 const jwt = require('jsonwebtoken');
 const { generateTransactionID, createTransactionHistroy } = require('../controler/sell-device')
 const axios = require('axios');
-
+require('dotenv').config();
+const frontEndUrl = process.env.frontEnd;
 const url = process.env.zte;
 // const bcrypt = require('bcrypt');
 require('dotenv').config();
@@ -452,7 +453,7 @@ const viewPaidEmiForAdmin = async (req, res) => {
                 return res.status(400).json({ message: 'Unauthorized:  Request' })
             }
             const result = await collection.find().toArray();
-            
+
             res.status(200).json(result)
 
         });
@@ -462,7 +463,78 @@ const viewPaidEmiForAdmin = async (req, res) => {
     }
 }
 
-module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi,viewPaidEmiForAdmin }
+
+
+const payInstallmentOnline = async (req, res) => {
+    try {
+        const data = req.body;
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const result = await collection.findOne({ loanId: data.loanId });
+
+        if (!result) {
+            return res.status(200).json({ message: 'No loan Found with These details' });
+        }
+
+        const axios = require('axios');
+        const ordId = '123456' + Date.now();
+        const dataToSend = {
+            loanId: data.loanId,
+            installmentId: data.installmentId,
+            amount: result.emiAmount,
+            order_id: ordId,
+        };
+
+        const encodedData = Buffer.from(JSON.stringify(dataToSend)).toString('base64');
+
+        const url = 'https://mobilefinder.store/api/create-order';
+        const data1 = {
+            customer_mobile: result.customerNumber,
+            user_token: '099f942cc0163b93025ed62655f4aed1',
+            amount: result.emiAmount,
+            order_id: ordId,
+            redirect_url: `${frontEndUrl}/payment-success?data=${encodedData}`,
+            remark1: data.loanId,
+            remark2: data.installmentId,
+        };
+
+        const response = await axios.post(url, data1);
+
+        const responseString = response.data;
+        
+
+        // Extract JSON part from the response string
+        const parts = responseString.split(')'); // Assuming the response ends with a closing parenthesis ')'
+        const jsonString = parts[parts.length - 1].trim(); // Get the last part and trim whitespace
+        
+        try {
+            const jsonResponse = JSON.parse(jsonString);
+            const paymentUrl = jsonResponse.result.payment_url;
+
+            res.status(200).json({ status: true, paymentUrl });
+        } catch (error) {
+           
+            res.status(500).json({ status: false, message: 'Failed to parse JSON response' });
+        }
+    } catch (error) {
+     
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi, viewPaidEmiForAdmin, payInstallmentOnline }
 
 
 

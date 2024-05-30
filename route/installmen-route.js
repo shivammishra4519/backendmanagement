@@ -1,4 +1,4 @@
-const {viewEmidetailsByNumber,payInstallment,viewPaidEmi,findInstallmentByloanId,viewAllemi,viewPaidEmiForAdmin}=require('../controler/installment')
+const {viewEmidetailsByNumber,payInstallment,viewPaidEmi,findInstallmentByloanId,viewAllemi,viewPaidEmiForAdmin,payInstallmentOnline}=require('../controler/installment')
 const express = require('express');
 const router = express.Router();
 
@@ -9,5 +9,6 @@ router.post('/viewpaidemi',viewPaidEmi);
 router.post('/viewloan',findInstallmentByloanId); 
 router.post('/viewallemi',viewAllemi); 
 router.post('/viewemi/admin',viewPaidEmiForAdmin); 
+router.post('/payonline/installment',payInstallmentOnline); 
 
 module.exports=router;

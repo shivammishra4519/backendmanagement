@@ -50,11 +50,11 @@ const customerRegister = async (req, res) => {
                 data.active = true;
                 if (!data.shop) {
                     data.shop = decodedToken.shop;
-                    data.registerId=decodedToken.number;
+                    data.registerId = decodedToken.number;
                 }
-                const role=decodedToken.role;
-                if(role== 'admin' || role == 'employee'){
-                    data.registerId=decodedToken.number
+                const role = decodedToken.role;
+                if (role == 'admin' || role == 'employee') {
+                    data.registerId = decodedToken.number
                 }
                 delete data.otp;
                 delete data.adharOtp;
@@ -77,14 +77,14 @@ const customerRegister = async (req, res) => {
 const customerList = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
-      
+
         if (!authHeader) {
             return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
         }
 
         // Extracting the token part after "Bearer "
         const token = authHeader.split(' ')[1];
-    
+
         if (!token) {
             return res.status(401).json({ error: 'Unauthorized: Token missing' });
         }
@@ -96,25 +96,25 @@ const customerList = async (req, res) => {
             try {
                 const db = getDB();
                 const collection = db.collection('customers');
-                const role=decodedToken.role;
-                if(role == 'admin' || role == 'employee'){
+                const role = decodedToken.role;
+                if (role == 'admin' || role == 'employee') {
                     const result = await collection.find().toArray();
                     return res.status(200).json(result);
                 }
-                const shop=decodedToken.shop;
-                const result=await collection.find({shop:shop}).toArray();
-                if(result){
+                const shop = decodedToken.shop;
+                const result = await collection.find({ shop: shop }).toArray();
+                if (result) {
                     return res.status(200).json(result)
                 }
-                return res.status(400).json({message:'data not found'})
-                
+                return res.status(400).json({ message: 'data not found' })
+
             } catch (error) {
-              
+
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
     } catch (error) {
-      
+
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -144,12 +144,12 @@ const viewAllData = async (req, res) => {
                 const resultCursor = await collection.findOne({ adharCardNumber: data.adharCardNumber });
                 return res.status(200).json(resultCursor);
             } catch (error) {
-              
+
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
     } catch (error) {
-      
+
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -174,7 +174,7 @@ const filterCustomer = async (req, res) => {
             }
             try {
                 const data = req.body;
-              
+
                 const db = getDB();
                 const collection = db.collection('customers');
                 const number = data.number;
@@ -189,12 +189,12 @@ const filterCustomer = async (req, res) => {
                 }
                 res.status(400).json({ message: 'invalid request' })
             } catch (error) {
-               
+
                 return res.status(500).json({ error: 'Internal server error' });
             }
         });
     } catch (error) {
-      
+
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -217,16 +217,16 @@ const verifyCustomer = async (req, res) => {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
             const data = req.body;
-           
+
             const number = data.number;
             if (!number) {
                 return res.status(400).json({ message: 'Something went wrong' });
             }
             const db = getDB();
             const collection = db.collection('customers');
-            
+
             const customerData = await collection.findOne({ number: parseInt(number) });
-           
+
             if (!customerData) {
                 return res.status(404).json({ message: 'Customer not found' });
             }
@@ -267,7 +267,7 @@ const isCustomerPresent = async (req, res) => {
             }
 
             const isUserExit = await collection.findOne(query);
-          
+
             if (isUserExit) {
                 return res.status(200).json({ status: 1, message: 'Customer Alreday exit' });
             }
@@ -282,18 +282,18 @@ const isCustomerPresent = async (req, res) => {
 const viewCustomerImageName = async (req, res) => {
     try {
         const db = getDB();
-        const collection=db.collection('customers');
-       
-        const data=req.body;
-        if(!data){
-            return res.status(400).json({message:'data not found'})
+        const collection = db.collection('customers');
+
+        const data = req.body;
+        if (!data) {
+            return res.status(400).json({ message: 'data not found' })
         }
-        const result=await collection.findOne({number:data.number});
-        if(result){
-            const images=result.images;
+        const result = await collection.findOne({ number: data.number });
+        if (result) {
+            const images = result.images;
             return res.status(200).json(images)
         }
-        res.status(400).json({message:'data not found'})
+        res.status(400).json({ message: 'data not found' })
     } catch (error) {
         console.error('Error:', error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -301,4 +301,42 @@ const viewCustomerImageName = async (req, res) => {
 }
 
 
-module.exports = { customerRegister, customerList, viewAllData, filterCustomer, verifyCustomer, isCustomerPresent,viewCustomerImageName };
+const findCustomerByManyId = async (req, res) => {
+    try {
+        const { userInput } = req.body;
+
+        console.log("sss",req.body)
+
+        if (!userInput) {
+            return res.status(400).json({ message: 'No search value found' });
+        }
+
+        const db = getDB();
+        const collection = db.collection('selldevice');
+
+        const query = {
+            $or: [
+                { imei1: userInput },
+                { loanId: userInput },
+                { customerNumber: parseInt(userInput) },
+                { loanKey: userInput }
+            ]
+        };
+
+        const result = await collection.findOne(query);
+
+        if (result) {
+            return res.status(200).json(result);
+        }
+
+        return res.status(404).json({ message: 'Customer not found' });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
+
+module.exports = { customerRegister, customerList, viewAllData, filterCustomer, verifyCustomer, isCustomerPresent, viewCustomerImageName, findCustomerByManyId };
