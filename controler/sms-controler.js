@@ -280,6 +280,9 @@ function replaceUrlPlaceholders(url, phoneNumber, message) {
     return url.replace('mmmm', phoneNumber).replace('tttt', message);
 }
 
+
+
+
   // Get the current date
  
 module.exports = { saveSms, getAllSms, addapi, viewApi, getTemplate, saveSmsDetails, sendSms }

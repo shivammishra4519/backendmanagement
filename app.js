@@ -29,6 +29,7 @@ const paytm = require('./payment/paytmpg');
 const bodyParser = require('body-parser');
 // const lockunlock=require('./automode/lock-unlock');
 const penality=require('./automode/penality');
+const reminder=require('./automode/remindersms')
 const appRoute=require('./route/app-routes');
 require('dotenv').config();
 connectToDB();
