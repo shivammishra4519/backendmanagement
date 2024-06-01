@@ -69,11 +69,11 @@ const downLoadInstallmentSlip = async (req, res) => {
                 return res.status(404).json({ message: 'Installment not found' });
             }
             // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
-            // const browser = await puppeteer.launch({
-            //     executablePath: '/usr/bin/chromium-browser',
-            //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            // });
-            const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+            const browser = await puppeteer.launch({
+                executablePath: '/usr/bin/chromium-browser',
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            });
+            // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
 
             const page = await browser.newPage();
             // await page.setViewport({
