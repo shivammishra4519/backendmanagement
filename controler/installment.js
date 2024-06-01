@@ -192,6 +192,7 @@ const payInstallment = async (req, res) => {
                 return res.status(400).json({ message: 'Something went wrong finding admin' });
 
             const adminId = admin.number;
+
             const adminWallet = await wallet.findOne({ user_id: adminId });
 
             const adminOpening = adminWallet.amount;
@@ -615,11 +616,10 @@ const updateInstallmentPayOnline = async (req, res) => {
 
         // Record transaction history
         const adminClosing = (await wallet.findOne({ user_id: adminId.number })).amount;
-        const adminTransactionInfo = {
-            // transaction details...
-        };
-        const transactionHistory = db.collection('emipaidhistory');
-        await transactionHistory.insertOne(adminTransactionInfo);
+
+
+
+
 
         // Record EMI paid history
         const paymentFormData = {
@@ -628,16 +628,38 @@ const updateInstallmentPayOnline = async (req, res) => {
             installmentId: response.remark2,
             utr: data.order_id,
             paymentBy: 'self',
-            paymentMod: 'Online',
+            paymentMod: 'online',
             amount: amount,
-            date: new Date(),
-            time: new Date()
+            date:getCurrentDate(),
+            time: getCurrentTime(),
         };
         const emiPaidCollection = db.collection('emiPaidHistory');
         await emiPaidCollection.insertOne(paymentFormData);
-        console.log(amount, typeof (amount))
+       
         // Update current credit
         const res1 = await emiCollection.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { currentCredit: -amount } });
+
+        const receiverClosingAmount = await emiCollection.findOne({ loanId: loanDetails.loanId })
+        const adminTransactionInfo = {
+            senderDetails: {
+                senderOpeningAmount: loanDetails.currentCredit,
+                senderClosingAmount: receiverClosingAmount.currentCredit
+            },
+            receiverDetails: {
+                receiverOpeningAmount: adminOpening,
+                receiverClosingAmount: adminClosing
+            },
+            TransactionID: generateTransactionID(),
+            time: getCurrentTime(),
+            date: getCurrentDate(),
+            amount: loanDetails.emiAmount,
+            senderId: loanDetails.customerNumber,
+            receiverId: adminId.number,
+            type: 'emiPaid',
+            type1: 'toAdmin'
+        };
+        const transactionHistory = db.collection('emipaidhistory');
+        await transactionHistory.insertOne(adminTransactionInfo);
         if (res1) {
             const zteKey = await emiCollection.findOne({ loanId: loanDetails.loanId });
             if (zteKey.loanKey) {

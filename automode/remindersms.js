@@ -41,9 +41,9 @@ const myMonthlyFunction = async () => {
                         }
 
                         const values = [doc.customerName, doc.emiAmount, emi.dueDate];
-                        console.log('jj', values);
+                      
                         const message = replacePlaceholders(template, values);
-                        console.log('temp', message);
+                       
                         sendsmsapi(message, doc.customerNumber);
                     }
                 }
@@ -91,7 +91,7 @@ const sendsmsapi = async (sms, number) => {
             template_id: template.templateId,
             pe_id: environment.pe_id
         });
-        console.log(queryParams)
+    
         const url = `${environment.smsApiUrl}?${queryParams}`;
 
         // Send SMS

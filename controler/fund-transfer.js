@@ -205,8 +205,9 @@ const transectiondetails = async (req, res) => {
             const role = decodedToken.role;
             if (role == 'admin') {
                 const filterData = await collection.find({ type: 'direct' }).sort({ createdAt: -1 }).limit(100).toArray();
-                const filterData1 = await collection.find({ type1: 'toAdmin' }).sort({ createdAt: -1 }).limit(100).toArray();
-                return res.status(200).json(filterData);
+                const filterData1 = await collection1.find({ type1: 'toAdmin' }).sort({ createdAt: -1 }).limit(100).toArray();
+               
+                return res.status(200).json({filterData,filterData1});
             }
             const number = decodedToken.number;
 
@@ -255,7 +256,7 @@ const transectiondetails = async (req, res) => {
                 }
               ]).toArray();
               
-              return res.status(200).json(filterData);
+              return res.status(200).json({filterData});
               
             
             
