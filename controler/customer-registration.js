@@ -319,6 +319,7 @@ const findCustomerByManyId = async (req, res) => {
                 { imei1: userInput },
                 { loanId: userInput },
                 { customerNumber: parseInt(userInput) },
+                { customerNumber: userInput },
                 { loanKey: userInput }
             ]
         };
