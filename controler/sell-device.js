@@ -583,35 +583,31 @@ const filterNotPaidEmi = async (req, res) => {
         const collection = db.collection('selldevice');
         
         try {
-            const result = await collection.aggregate([
-                {
-                    $addFields: {
-                        installmentsDueDates: {
-                            $map: {
-                                input: "$installments",
-                                as: "installment",
-                                in: {
-                                    $dateFromString: {
-                                        dateString: "$$installment.dueDate",
-                                        format: "%d-%m-%Y"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                {
-                    $match: {
-                        $and: [
-                            { "installments.paid": false }, // At least one unpaid installment
-                            { "installmentsDueDates": { $lt: new Date() } } // Due date has passed
-                        ]
+            let array=[]
+            const result = await collection.find({ currentCredit: { $gt: 0 } }).toArray();
+
+        for (const doc of result) {
+            const installments = doc.installments;
+            
+            for (const emi of installments) {
+                if (!emi.paid) {
+                    // Extract the due date from the installment
+                    const [day, month, year] = emi.dueDate.split('-').map(Number);
+                    const dueDate = new Date(year, month - 1, day);
+
+                    const currentDate = new Date();
+                    currentDate.setHours(0, 0, 0, 0); 
+                    
+                    // Check if the due date has passed
+                    if (dueDate < currentDate) {
+                       array.push(doc)
+                        
                     }
                 }
-            ]).toArray();
-        
-          
-            res.status(200).json(result);
+            }
+        }
+          console.log(array.length)
+            res.status(200).json(array);
         } catch (error) {
             console.error("Error occurred during aggregation:", error);
             res.status(500).json({ error: "An error occurred during aggregation" });

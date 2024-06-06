@@ -502,6 +502,7 @@ const payInstallmentOnline = async (req, res) => {
         const responseString = response.data;
 
         const onlinePaymentCollection = db.collection('onlinePayments');
+        console.log(response)
 
         // Extract JSON part from the response string
         const parts = responseString.split(')'); // Assuming the response ends with a closing parenthesis ')'
@@ -626,7 +627,7 @@ const updateInstallmentPayOnline = async (req, res) => {
             user_id: loanDetails.customerNumber,
             loan_Id: loanDetails.loanId,
             installmentId: response.remark2,
-            utr: data.order_id,
+            utr: response.result.utr,
             paymentBy: 'self',
             paymentMod: 'online',
             amount: amount,
