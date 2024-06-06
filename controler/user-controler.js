@@ -188,6 +188,7 @@ const walletCheckUser = async (req, res) => {
             if (!amount) {
                 return res.status(400).json({ message: 'user not exit' })
             }
+            
             res.status(200).json(amount);
         });
     } catch (error) {
