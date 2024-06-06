@@ -68,6 +68,11 @@ const downLoadInstallmentSlip = async (req, res) => {
             if (!installment) {
                 return res.status(404).json({ message: 'Installment not found' });
             }
+            const paid = installment.paid;
+            if (!paid) {
+                console.log(data)
+                return res.status(400).json({ message: 'EMI not paid yet' });
+            }
             // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
             const browser = await puppeteer.launch({
                 executablePath: '/usr/bin/chromium-browser',

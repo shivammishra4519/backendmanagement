@@ -261,7 +261,7 @@ const payInstallment = async (req, res) => {
                 const lockStatus = await lockDevice(zteKey.loanKey);
                 console.log("Lock status", lockStatus);
             }
-
+           await sendSmsEmiPaid(zteKey,data.amount,data.installmentId);
             res.status(200).json({ message: 'EMI paid successfully' });
         });
     } catch (error) {
@@ -626,17 +626,18 @@ const updateInstallmentPayOnline = async (req, res) => {
         const paymentFormData = {
             user_id: loanDetails.customerNumber,
             loan_Id: loanDetails.loanId,
-            installmentId: response.remark2,
+            installmentId: result.remark2,
             utr: response.result.utr,
             paymentBy: 'self',
             paymentMod: 'online',
             amount: amount,
-            date:getCurrentDate(),
+            date: getCurrentDate(),
             time: getCurrentTime(),
+            employeeId:'paymentGatway'
         };
         const emiPaidCollection = db.collection('emiPaidHistory');
         await emiPaidCollection.insertOne(paymentFormData);
-       
+
         // Update current credit
         const res1 = await emiCollection.findOneAndUpdate({ loanId: loanDetails.loanId }, { $inc: { currentCredit: -amount } });
 
@@ -668,7 +669,7 @@ const updateInstallmentPayOnline = async (req, res) => {
             }
         }
 
-
+        await sendSmsEmiPaid(loanDetails, result.amount,result.remark2);
         res.status(200).json({ message: 'EMI paid successfully' });
 
 
@@ -701,8 +702,72 @@ async function checkOrderStatus(order_id) {
 
 
 
+ // Adjust the path according to your project structure
+
+const sendSmsEmiPaid = async (data, amount, emiId) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('smstemplates');
+        const result = await collection.findOne({ smsType: 'EMI_PAID1' });
+        if (!result) {
+            return 0;
+        }
+        const template = result.template;
+        const apiurl = process.env.apiUrl;
+        const link = `${apiurl}pdf/installment-slip?loanId=${encodeURIComponent(data.loanId)}&emiId=${encodeURIComponent(emiId)}`;
+       
+        const values = [data.customerName, amount, `${data.brandName} ${data.modelName}`, getCurrentDate(), link];
+        const modfiyedTemplate = replacePlaceholders(template, values);
+        
+        const encodedMessage = encodeURIComponent(modfiyedTemplate);
+        const encodedPhoneNumber = encodeURIComponent(data.customerNumber);
+        const url = replaceUrlPlaceholdersApi(result.api, encodedPhoneNumber, encodedMessage);
+        console.log('url', url);
+        
+        let response;
+        try {
+            const res = await axios.get(url);
+            response = res.data;
+            console.log('Response data:', response);
+        } catch (error) {
+            console.error('Error:', error);
+            response = 'msg not sent';
+        }
+
+        const smsDetails = {
+            number: data.customerNumber,
+            message: modfiyedTemplate,
+            smsShotId: response || 'msg sent',
+            date: getCurrentDate(),
+            time: getCurrentTime()
+        };
+
+        const collection1 = db.collection('sendedsms');
+        const result1 = await collection1.insertOne(smsDetails);
+        if (!result1) {
+            return 0;
+        }
+        return 1;
+    } catch (error) {
+        console.error('Error occurred while making the request:', error);
+        return 0;
+    }
+};
+
+module.exports = { sendSmsEmiPaid };
 
 
+function replacePlaceholders(template, values) {
+    let index = 0;
+    return template.replace(/{#var#}/g, () => {
+        return values[index++];
+    });
+}
+
+
+function replaceUrlPlaceholdersApi(url, phoneNumber, message) {
+    return url.replace('mmmm', phoneNumber).replace('tttt', message);
+}
 module.exports = { viewEmidetailsByNumber, payInstallment, viewPaidEmi, findInstallmentByloanId, viewAllemi, viewPaidEmiForAdmin, payInstallmentOnline, updateInstallmentPayOnline }
 
 
