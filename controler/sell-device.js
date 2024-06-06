@@ -606,7 +606,7 @@ const filterNotPaidEmi = async (req, res) => {
                 }
             }
         }
-          console.log(array.length)
+          
             res.status(200).json(array);
         } catch (error) {
             console.error("Error occurred during aggregation:", error);

@@ -322,35 +322,32 @@ const unpaidEmiToexcel = async (req, res) => {
                 const db = getDB();
                 const collection = db.collection('selldevice');
 
-                const result = await collection.aggregate([
-                    {
-                        $addFields: {
-                            installmentsDueDates: {
-                                $map: {
-                                    input: "$installments",
-                                    as: "installment",
-                                    in: {
-                                        $dateFromString: {
-                                            dateString: "$$installment.dueDate",
-                                            format: "%d-%m-%Y"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    {
-                        $match: {
-                            $and: [
-                                { "installments.paid": false }, // At least one unpaid installment
-                                { "installmentsDueDates": { $lt: new Date() } } // Due date has passed
-                            ]
+                let array=[]
+                const result = await collection.find({ currentCredit: { $gt: 0 } }).toArray();
+    
+            for (const doc of result) {
+                const installments = doc.installments;
+                
+                for (const emi of installments) {
+                    if (!emi.paid) {
+                        // Extract the due date from the installment
+                        const [day, month, year] = emi.dueDate.split('-').map(Number);
+                        const dueDate = new Date(year, month - 1, day);
+    
+                        const currentDate = new Date();
+                        currentDate.setHours(0, 0, 0, 0); 
+                        
+                        // Check if the due date has passed
+                        if (dueDate < currentDate) {
+                           array.push(doc)
+                            
                         }
                     }
-                ]).toArray();
+                }
+            }
               
 
-                const documents = result.map(item => ({
+                const documents = array.map(item => ({
                     CustomerName: item.CustomerName,
                     Number: item.customerNumber,
                     IMEI: parseInt(item.imei1),
