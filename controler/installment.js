@@ -261,7 +261,7 @@ const payInstallment = async (req, res) => {
                 const lockStatus = await lockDevice(zteKey.loanKey);
                 console.log("Lock status", lockStatus);
             }
-           await sendSmsEmiPaid(zteKey,data.amount,data.installmentId);
+            await sendSmsEmiPaid(zteKey, data.amount, data.installmentId);
             res.status(200).json({ message: 'EMI paid successfully' });
         });
     } catch (error) {
@@ -451,7 +451,8 @@ const viewPaidEmiForAdmin = async (req, res) => {
             const db = getDB();
             const collection = db.collection('emiPaidHistory');
             if (!role == 'admin') {
-                return res.status(400).json({ message: 'Unauthorized:  Request' })
+                const result = await collection.find({ employeeId: decodedToken.number }).toArray();
+                res.status(200).json(result)
             }
             const result = await collection.find().toArray();
 
@@ -633,7 +634,7 @@ const updateInstallmentPayOnline = async (req, res) => {
             amount: amount,
             date: getCurrentDate(),
             time: getCurrentTime(),
-            employeeId:'paymentGatway'
+            employeeId: 'paymentGatway'
         };
         const emiPaidCollection = db.collection('emiPaidHistory');
         await emiPaidCollection.insertOne(paymentFormData);
@@ -669,7 +670,7 @@ const updateInstallmentPayOnline = async (req, res) => {
             }
         }
 
-        await sendSmsEmiPaid(loanDetails, result.amount,result.remark2);
+        await sendSmsEmiPaid(loanDetails, result.amount, result.remark2);
         res.status(200).json({ message: 'EMI paid successfully' });
 
 
@@ -702,7 +703,7 @@ async function checkOrderStatus(order_id) {
 
 
 
- // Adjust the path according to your project structure
+// Adjust the path according to your project structure
 
 const sendSmsEmiPaid = async (data, amount, emiId) => {
     try {
@@ -715,15 +716,15 @@ const sendSmsEmiPaid = async (data, amount, emiId) => {
         const template = result.template;
         const apiurl = process.env.apiUrl;
         const link = `${apiurl}pdf/installment-slip?loanId=${encodeURIComponent(data.loanId)}&emiId=${encodeURIComponent(emiId)}`;
-       
+
         const values = [data.customerName, amount, `${data.brandName} ${data.modelName}`, getCurrentDate(), link];
         const modfiyedTemplate = replacePlaceholders(template, values);
-        
+
         const encodedMessage = encodeURIComponent(modfiyedTemplate);
         const encodedPhoneNumber = encodeURIComponent(data.customerNumber);
         const url = replaceUrlPlaceholdersApi(result.api, encodedPhoneNumber, encodedMessage);
         console.log('url', url);
-        
+
         let response;
         try {
             const res = await axios.get(url);
