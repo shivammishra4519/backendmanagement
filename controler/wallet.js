@@ -52,6 +52,18 @@ const checkWalletAmount = async (req, res) => {
                 const collection = db.collection('wallets');
                 const user_id=decodedToken.number;
                 const result=await collection.findOne({user_id:user_id});
+
+                // {
+                //     "_id": "65ed78a322582f523903c8c2",
+                //     "user_id": 9198899433,
+                //     "amount": 9466.130000000012,
+                //     "credit": 0
+                // }
+
+                const formattedAmount = result.amount.toFixed(2); // Returns a string with 2 decimal places
+                const numberAmount = parseFloat(formattedAmount);
+               result.amount=numberAmount;
+
                 res.status(200).json(result);
             } catch (error) {
                 console.error('Error:', error);
