@@ -349,8 +349,8 @@ const unpaidEmiToexcel = async (req, res) => {
 
                 const documents = array.map(item => ({
                     Date:item.purchaseDate,
-                    CustomerName: parseInt(item.customerName),
-                    Number: item.customerNumber,
+                    CustomerName: item.customerName,
+                    Number: parseInt(item.customerNumber),
                     IMEI: parseInt(item.imei1),
                     brandName: item.brandName,
                     shop: item.shop,
