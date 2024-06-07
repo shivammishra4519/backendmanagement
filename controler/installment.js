@@ -503,8 +503,8 @@ const payInstallmentOnline = async (req, res) => {
         const responseString = response.data;
 
         const onlinePaymentCollection = db.collection('onlinePayments');
-        console.log(response)
-
+        data1.customerNumber = result.customerNumber;
+        data1.customerName = result.customerName
         // Extract JSON part from the response string
         const parts = responseString.split(')'); // Assuming the response ends with a closing parenthesis ')'
         const jsonString = parts[parts.length - 1].trim(); // Get the last part and trim whitespace

@@ -45,9 +45,13 @@ const myMinuteFunction = async () => {
 };
 
 // Schedule the job to run every minute
-schedule.scheduleJob('* * * * *', myMinuteFunction);
+schedule.scheduleJob('0 8 * * *', myMinuteFunction);
 
-console.log('Scheduler started: job will run every minute.');
+// Schedule the job to run at 12:00 PM (noon)
+schedule.scheduleJob('0 12 * * *', myMinuteFunction);
+
+// Schedule the job to run at 6:00 PM
+schedule.scheduleJob('0 18 * * *', myMinuteFunction);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
