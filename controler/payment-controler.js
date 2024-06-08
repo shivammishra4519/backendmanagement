@@ -1,9 +1,9 @@
 const { getDB } = require('../dbconnection')
 const jwt = require('jsonwebtoken');
 const key = process.env.secretkey;
-const axios=require('axios')
+const axios = require('axios')
 
-const onlinePaymentsRequest=async(req,res)=>{
+const onlinePaymentsRequest = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -19,17 +19,17 @@ const onlinePaymentsRequest=async(req,res)=>{
             if (err) {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
-            const db=getDB();
-            const collection=db.collection('onlinePayments');
-            const result=await collection.find().toArray();
-            res.status(200).json({result})
+            const db = getDB();
+            const collection = db.collection('onlinePayments');
+            const result = await collection.find().toArray();
+            res.status(200).json({ result })
         });
     } catch (error) {
-        return res.status(500).json({message:'internal server error'})
+        return res.status(500).json({ message: 'internal server error' })
     }
 }
 
-const checkPaymentStatus=async(req,res)=>{
+const checkPaymentStatus = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
         if (!authHeader) {
@@ -45,15 +45,15 @@ const checkPaymentStatus=async(req,res)=>{
             if (err) {
                 return res.status(401).json({ error: 'Unauthorized: Invalid token' });
             }
-            const data=req.body;
-            const response=await checkOrderStatus(data.order_id);
+            const data = req.body;
+            const response = await checkOrderStatus(data.order_id);
             if (response.status == 'COMPLETED') {
                 return res.status(200).json(response);
             }
-            res.status(400).json({message:'Payemnt not recevied'})
+            res.status(400).json({ message: 'Payemnt not recevied' })
         });
     } catch (error) {
-        return res.status(500).json({message:'internal server error'})
+        return res.status(500).json({ message: 'internal server error' })
     }
 }
 
@@ -73,4 +73,34 @@ async function checkOrderStatus(order_id) {
         console.error('Error occurred while making the request:', error);
     }
 }
-module.exports = {onlinePaymentsRequest,checkPaymentStatus};
+
+const checkUtrIsExit = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            return res.status(401).json({ error: 'Unauthorized: Authorization header missing' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Unauthorized: Token missing' });
+        }
+
+        jwt.verify(token, key, async (err, decodedToken) => {
+            if (err) {
+                return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            }
+            const data = req.body;
+            const db = getDB();
+            const collection = db.collection('emiPaidHistory');
+            const result=await collection.findOne({utr:data.utr});
+            if(result){
+                return res.status(200).json(result)
+            }
+            res.status(200).json(null);
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'internal server error' })
+    }
+}
+module.exports = { onlinePaymentsRequest, checkPaymentStatus,checkUtrIsExit };
