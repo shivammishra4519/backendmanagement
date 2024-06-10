@@ -95,7 +95,7 @@ const checkUtrIsExit = async (req, res) => {
             const collection = db.collection('emiPaidHistory');
             const result = await collection.findOne({ utr: data.utr });
             const paymentMode = data.paymentMod;
-            console.log(paymentMode)
+           
             if (paymentMode == 'online') {
                 return res.status(200).json(result)
             }
