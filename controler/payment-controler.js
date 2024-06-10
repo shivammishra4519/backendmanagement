@@ -93,8 +93,12 @@ const checkUtrIsExit = async (req, res) => {
             const data = req.body;
             const db = getDB();
             const collection = db.collection('emiPaidHistory');
-            const result=await collection.findOne({utr:data.utr});
-            if(result){
+            const result = await collection.findOne({ utr: data.utr });
+            const paymentMode = data.paymentMod;
+            if (!paymentMode == 'online') {
+                return res.status(200).json(null)
+            }
+            if (result) {
                 return res.status(200).json(result)
             }
             res.status(200).json(null);
@@ -103,4 +107,4 @@ const checkUtrIsExit = async (req, res) => {
         return res.status(500).json({ message: 'internal server error' })
     }
 }
-module.exports = { onlinePaymentsRequest, checkPaymentStatus,checkUtrIsExit };
+module.exports = { onlinePaymentsRequest, checkPaymentStatus, checkUtrIsExit };
