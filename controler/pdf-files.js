@@ -275,14 +275,15 @@ const dataForInvoice = async (req, res) => {
         const collection = db.collection('selldevice');
         const collection1 = db.collection('users');
         const result = await collection.findOne({ loanId: data.loanId });
+        console.log(result)
         const result1 = await collection1.findOne({ number: parseInt(data.number) }, {
             projection: {
                 number: 1,
                 shopName: 1,
                 state: 1,
                 district: 1,
-                GSTIN: 1,
-                panNo: 1,
+                gstNumber: 1,
+                pan: 1,
                 _id: 0
             }
         });
