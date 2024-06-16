@@ -276,7 +276,7 @@ const dataForInvoice = async (req, res) => {
         const collection1 = db.collection('users');
         const result = await collection.findOne({ loanId: data.loanId });
         console.log(result)
-        const result1 = await collection1.findOne({ number: parseInt(data.number) }, {
+        const result1 = await collection1.findOne({ shop: data.shop }, {
             projection: {
                 number: 1,
                 shopName: 1,
@@ -297,6 +297,56 @@ const dataForInvoice = async (req, res) => {
     }
 }
 
+
+const downloadInvoieForCompany = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const data = req.query;
+  
+        if (!data || !data.number) {
+            return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+        }
+
+
+        const url = process.env.frontEnd; // Define the front-end URL
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:false});
+        const page = await browser.newPage();
+
+        try {
+            // Navigate to the webpage
+            // guarantor-condtiton?number=5426859625
+            await page.goto(`${url}/?loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
+
+            // Set up the PDF options
+            const pdfOptions = {
+                format: 'A4',
+                printBackground: true,
+            };
+
+            // Generate the PDF as a buffer
+            const pdfBuffer = await page.pdf(pdfOptions);
+
+            // Set response headers for file download
+            res.setHeader('Content-Disposition', 'attachment; filename="invoice.pdf"');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.send(pdfBuffer);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({ error: 'Error generating PDF' });
+        } finally {
+            // Close the browser
+            await browser.close();
+        }
+    } catch (error) {
+        console.error('Internal server error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 
 const findPlaceOfUserAndCustomer = async (req, res) => {
     try {
@@ -354,6 +404,6 @@ const findLoanDetails = async (req, res) => {
 
 module.exports = {
     downLoadTermsConditon, downLoadInstallmentSlip, dataForInvoice,
-    findPlaceOfUserAndCustomer, downloadAggrement, detailsOfAdmin, findLoanDetails, downloadInvoiceForCustomer, downloadGaurntorCondition
+    findPlaceOfUserAndCustomer, downloadAggrement, detailsOfAdmin, findLoanDetails, downloadInvoiceForCustomer, downloadGaurntorCondition,downloadInvoieForCompany
 };
 
