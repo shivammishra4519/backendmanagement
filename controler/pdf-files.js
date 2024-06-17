@@ -128,7 +128,7 @@ const downloadAggrement = async (req, res) => {
 
 
         const url = process.env.frontEnd; // Define the front-end URL
-        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:false });
         const browser = await puppeteer.launch({
             executablePath: '/usr/bin/chromium-browser',
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -275,8 +275,8 @@ const dataForInvoice = async (req, res) => {
         const collection = db.collection('selldevice');
         const collection1 = db.collection('users');
         const result = await collection.findOne({ loanId: data.loanId });
-        console.log(result)
-        const result1 = await collection1.findOne({ shop: data.shop }, {
+       console.log('result.shop ',result.shop )
+        const result1 = await collection1.findOne({ shopName: result.shop }, {
             projection: {
                 number: 1,
                 shopName: 1,
@@ -303,8 +303,8 @@ const downloadInvoieForCompany = async (req, res) => {
         const db = getDB();
         const collection = db.collection('selldevice');
         const data = req.query;
-  
-        if (!data || !data.number) {
+ 
+        if (!data || !data.loanId) {
             return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
         }
 
@@ -320,7 +320,7 @@ const downloadInvoieForCompany = async (req, res) => {
         try {
             // Navigate to the webpage
             // guarantor-condtiton?number=5426859625
-            await page.goto(`${url}/?loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
+            await page.goto(`${url}/invoice?loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
 
             // Set up the PDF options
             const pdfOptions = {
@@ -340,7 +340,7 @@ const downloadInvoieForCompany = async (req, res) => {
             res.status(500).json({ error: 'Error generating PDF' });
         } finally {
             // Close the browser
-            await browser.close();
+            // await browser.close();
         }
     } catch (error) {
         console.error('Internal server error:', error);

@@ -31,7 +31,8 @@ const bodyParser = require('body-parser');
 const penality=require('./automode/penality');
 const reminder=require('./automode/remindersms')
 const appRoute=require('./route/app-routes');
-const paymentRoutes=require('./route/payment-routes')
+const paymentRoutes=require('./route/payment-routes');
+const homeAppliance=require('./route/home-appliances-route');
 require('dotenv').config();
 connectToDB();
 const port = process.env.PORT || 4000;
@@ -71,6 +72,7 @@ app.use('/collection',dailyCollection);
 app.use('/guarantor',imgaeUpload)
 app.use('/customer',appRoute);
 app.use('/payment',paymentRoutes);
+app.use('/home',homeAppliance);
 
 
 app.get('/', (req, res) => {
