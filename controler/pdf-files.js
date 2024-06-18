@@ -134,11 +134,62 @@ const downloadAggrement = async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
         const page = await browser.newPage();
-        
+
 
         try {
             // Navigate to the webpage
             await page.goto(`${url}/aggrement?customerId=${data.customerId}&shopId=${data.shopId}&loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
+
+            // Set up the PDF options
+            const pdfOptions = {
+                format: 'A4',
+                printBackground: true,
+            };
+
+            // Generate the PDF as a buffer
+            const pdfBuffer = await page.pdf(pdfOptions);
+
+
+            // Set response headers for file download
+            res.setHeader('Content-Disposition', 'attachment; filename="aggrement.pdf"');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.send(pdfBuffer);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({ error: 'Error generating PDF' });
+        } finally {
+            // Close the browser
+            await browser.close();
+        }
+    } catch (error) {
+        console.error('Internal server error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const downloadAggrementHomeAppliances = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const data = req.query;
+
+        if (!data || !data.loanId || !data.shopId) {
+            return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+        }
+
+
+        const url = process.env.frontEnd; // Define the front-end URL
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:false });
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+        const page = await browser.newPage();
+
+
+        try {
+            // Navigate to the webpage
+            await page.goto(`${url}/aggrement-homeapplinaces?customerId=${data.customerId}&shopId=${data.shopId}&loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
 
             // Set up the PDF options
             const pdfOptions = {
@@ -221,7 +272,7 @@ const downloadGaurntorCondition = async (req, res) => {
         const db = getDB();
         const collection = db.collection('selldevice');
         const data = req.query;
-  
+
         if (!data || !data.number) {
             return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
         }
@@ -270,12 +321,12 @@ const downloadGaurntorCondition = async (req, res) => {
 const dataForInvoice = async (req, res) => {
     try {
         const data = req.body;
-
+        console.log(req.query)
         const db = getDB();
         const collection = db.collection('selldevice');
         const collection1 = db.collection('users');
         const result = await collection.findOne({ loanId: data.loanId });
-       console.log('result.shop ',result.shop )
+        console.log('result', result)
         const result1 = await collection1.findOne({ shopName: result.shop }, {
             projection: {
                 number: 1,
@@ -293,6 +344,7 @@ const dataForInvoice = async (req, res) => {
         }
         res.status(400).json({ message: 'data not found' })
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Internal server error' });
     }
 }
@@ -303,12 +355,12 @@ const downloadInvoieForCompany = async (req, res) => {
         const db = getDB();
         const collection = db.collection('selldevice');
         const data = req.query;
- 
+
         if (!data || !data.loanId) {
             return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
         }
 
-
+        const result = await collection.findOne({ loanId: data.loanId });
         const url = process.env.frontEnd; // Define the front-end URL
         const browser = await puppeteer.launch({
             executablePath: '/usr/bin/chromium-browser',
@@ -320,7 +372,7 @@ const downloadInvoieForCompany = async (req, res) => {
         try {
             // Navigate to the webpage
             // guarantor-condtiton?number=5426859625
-            await page.goto(`${url}/invoice?loanId=${data.loanId}`, { waitUntil: 'networkidle2' });
+            await page.goto(`${url}/invoice?loanId=${data.loanId}&invoice=${result.invoice}`, { waitUntil: 'networkidle2' });
 
             // Set up the PDF options
             const pdfOptions = {
@@ -340,7 +392,7 @@ const downloadInvoieForCompany = async (req, res) => {
             res.status(500).json({ error: 'Error generating PDF' });
         } finally {
             // Close the browser
-            // await browser.close();
+            await browser.close();
         }
     } catch (error) {
         console.error('Internal server error:', error);
@@ -348,12 +400,72 @@ const downloadInvoieForCompany = async (req, res) => {
     }
 };
 
+
+
+const downloadInvoieForCompanyHomeAppliances = async (req, res) => {
+    try {
+        const db = getDB();
+        const collection = db.collection('selldevice');
+        const data = req.query;
+
+        if (!data || !data.loanId) {
+            return res.status(400).json({ error: 'Invalid request. Missing loanId or emiId.' });
+        }
+
+        const result = await collection.findOne({ loanId: data.loanId });
+        const url = process.env.frontEnd; // Define the front-end URL
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+        // const browser = await puppeteer.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:false});
+        const page = await browser.newPage();
+
+        try {
+            // Navigate to the webpage
+            // guarantor-condtiton?number=5426859625
+            await page.goto(`${url}/invoice-homeappliance?loanId=${data.loanId}&invoice=${result.invoice}`, { waitUntil: 'networkidle2' });
+
+            // Set up the PDF options
+            const pdfOptions = {
+                format: 'A4',
+                printBackground: true,
+            };
+
+            // Generate the PDF as a buffer
+            const pdfBuffer = await page.pdf(pdfOptions);
+
+            // Set response headers for file download
+            res.setHeader('Content-Disposition', 'attachment; filename="invoice.pdf"');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.send(pdfBuffer);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({ error: 'Error generating PDF' });
+        } finally {
+            // Close the browser
+            await browser.close();
+        }
+    } catch (error) {
+        console.error('Internal server error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 const findPlaceOfUserAndCustomer = async (req, res) => {
     try {
         const db = getDB();
         const data = req.body;
 
-        const findShopPlace = await db.collection('users').findOne({ number: parseInt(data.shopId) }, { projection: { address: 1, _id: 0 } });
+        const findShopPlace = await db.collection('users').findOne(
+            {
+                $or: [
+                    { number: parseInt(data.shopId) },
+                    { shopName: data.shopId }
+                ]
+            },
+            { projection: { address: 1, _id: 0 } }
+        );
+
         const customerPlace = await db.collection('customers').findOne({ number: parseInt(data.customerId,) }, { projection: { state: 1, district: 1, address: 1, firstName: 1, _id: 0 } });
         const loanDate = await db.collection('selldevice').findOne({ loanId: data.loanId }, {
             projection: {
@@ -404,6 +516,7 @@ const findLoanDetails = async (req, res) => {
 
 module.exports = {
     downLoadTermsConditon, downLoadInstallmentSlip, dataForInvoice,
-    findPlaceOfUserAndCustomer, downloadAggrement, detailsOfAdmin, findLoanDetails, downloadInvoiceForCustomer, downloadGaurntorCondition,downloadInvoieForCompany
+    findPlaceOfUserAndCustomer, downloadAggrement, detailsOfAdmin, findLoanDetails, downloadInvoiceForCustomer, downloadGaurntorCondition, downloadInvoieForCompany,
+    downloadAggrementHomeAppliances,downloadInvoieForCompanyHomeAppliances
 };
 

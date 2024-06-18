@@ -30,6 +30,7 @@ sellDeviceDetails=Joi.object({
     gaurantorNumber:Joi.number().required(),
     loanKey:Joi.string().required(),
     type:Joi.any(),
+    serialNumber:Joi.any(),
 })
 
-module.exports={deviceDetails,sellDeviceDetails}
+module.exports={deviceDetails,sellDeviceDetails} 
