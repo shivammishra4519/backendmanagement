@@ -111,7 +111,15 @@ const viewSoldDevices = async (req, res) => {
 
             const db = getDB();
             const collection = db.collection('selldevice');
-            const result = await collection.find().toArray();
+            let result
+            
+            const role = decodedToken.role;
+            if(role == 'user'){
+                 result = await collection.find({shop:decodedToken.shop}).toArray();
+            }
+            if(role !== 'user'){
+                result = await collection.find().toArray();
+            }
             if (!result) {
                 return res.status(400).json({ message: 'somtheing went wrong' })
             }
@@ -189,7 +197,7 @@ const viewEmployees = async (req, res) => {
             if (role == 'admin') {
                 const result = await collection.find({ role: 'employee' }).toArray();
                 const total = result.length;
-                
+
                 return res.status(200).json({ totalEmployees: total });
             } else {
 
@@ -275,7 +283,7 @@ const allUsersWallet = async (req, res) => {
             const totalAmount = wallets.reduce((sum, wallet) => sum + wallet.amount, 0);
             const formattedAmount = totalAmount.toFixed(2); // Returns a string with 2 decimal places
             const numberAmount = parseFloat(formattedAmount);
-            return res.status(200).json({ totalAmount :numberAmount});
+            return res.status(200).json({ totalAmount: numberAmount });
         });
 
     } catch (error) {
@@ -316,7 +324,7 @@ const allEmployeeWallet = async (req, res) => {
             const totalAmount = wallets.reduce((sum, wallet) => sum + wallet.amount, 0);
             const formattedAmount = totalAmount.toFixed(2); // Returns a string with 2 decimal places
             const numberAmount = parseFloat(formattedAmount);
-            return res.status(200).json({ totalAmount :numberAmount});
+            return res.status(200).json({ totalAmount: numberAmount });
         });
 
     } catch (error) {
@@ -354,7 +362,7 @@ const totalFileCharge = async (req, res) => {
             const totalAmount = loans.reduce((sum, wallet) => sum + wallet.fileCharge, 0);
             const formattedAmount = totalAmount.toFixed(2); // Returns a string with 2 decimal places
             const numberAmount = parseFloat(formattedAmount);
-            return res.status(200).json({ totalAmount:numberAmount });
+            return res.status(200).json({ totalAmount: numberAmount });
         });
 
     } catch (error) {
@@ -432,7 +440,7 @@ const totalFileChargeCurrentMonth = async (req, res) => {
             const totalAmount = loans.reduce((sum, loan) => sum + loan.fileCharge, 0);
             const formattedAmount = totalAmount.toFixed(2); // Returns a string with 2 decimal places
             const numberAmount = parseFloat(formattedAmount);
-            return res.status(200).json({ totalAmount:numberAmount });
+            return res.status(200).json({ totalAmount: numberAmount });
         });
 
     } catch (error) {
