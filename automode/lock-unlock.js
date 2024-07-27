@@ -10,7 +10,7 @@ const myMinuteFunction = async () => {
         const collection = db.collection('selldevice');
 
         const result = await collection.find({ currentCredit: { $gt: 0 } }).toArray();
-
+        console.log("1222")
         for (const doc of result) {
             const installments = doc.installments;
             for (const emi of installments) {
@@ -52,7 +52,8 @@ schedule.scheduleJob('30 8 * * *', myMinuteFunction);
 schedule.scheduleJob('0 12 * * *', myMinuteFunction);
 
 // Schedule the job to run at 6:00 PM
-schedule.scheduleJob('0 18 * * *', myMinuteFunction);
+// schedule.scheduleJob('0 18 * * *', myMinuteFunction);
+schedule.scheduleJob('* * * * *', myMinuteFunction);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
