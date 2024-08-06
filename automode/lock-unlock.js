@@ -33,7 +33,7 @@ const myMinuteFunction = async () => {
                         const isFromZte = doc.loanKey; // Correctly access doc.loanKey
                         if (isFromZte) {
 
-                            // const response = await lockDevice(isFromZte);
+                            const response = await lockDevice(isFromZte);
                             console.log(`Lock device response for ${isFromZte}:`);
                         }
 
@@ -57,8 +57,8 @@ schedule.scheduleJob('30 8 * * *', myMinuteFunction);
 schedule.scheduleJob('0 12 * * *', myMinuteFunction);
 
 // Schedule the job to run at 6:00 PM
-// schedule.scheduleJob('0 18 * * *', myMinuteFunction);
-schedule.scheduleJob('* * * * *', myMinuteFunction);
+schedule.scheduleJob('0 18 * * *', myMinuteFunction);
+// schedule.scheduleJob('* * * * *', myMinuteFunction);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
