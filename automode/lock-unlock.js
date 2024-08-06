@@ -21,15 +21,20 @@ const myMinuteFunction = async () => {
                     const [day, month, year] = dueDate.split('-');
                     let currentMonth = new Date().getMonth();
                     const currentDate=new Date().getDate();
+                    const year1=new Date().getFullYear();
+                    console.log(year1)
+                    console.log(year)
+
+                   
                     currentMonth = currentMonth + 1;
                    
-                    if (month <= currentMonth && currentDate > 5) {
+                    if (month <= currentMonth && currentDate > 5 && year == year1) {
 
                         const isFromZte = doc.loanKey; // Correctly access doc.loanKey
                         if (isFromZte) {
 
-                            const response = await lockDevice(isFromZte);
-                            console.log(`Lock device response for ${isFromZte}:`, response);
+                            // const response = await lockDevice(isFromZte);
+                            console.log(`Lock device response for ${isFromZte}:`);
                         }
 
                     }
