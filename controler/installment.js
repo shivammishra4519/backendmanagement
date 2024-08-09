@@ -97,7 +97,7 @@ const payInstallment = async (req, res) => {
             if (!customerCheck)
                 return res.status(400).json({ message: 'Something went wrong with customer check' });
 
-            if (!(customerCheck.credit >= data.amount))
+            if (!(customerCheck.credit >= (data.amount-5)))
                 return res.status(400).json({ message: 'No credit amount available for the customer' });
 
 
