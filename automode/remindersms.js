@@ -57,7 +57,7 @@ const myMonthlyFunction = async () => {
 
 // Schedule the job to run every 30 seconds
 // schedule.scheduleJob('*/30 * * * * *', myMonthlyFunction);
-schedule.scheduleJob('33 15 1-10 * *', myMonthlyFunction);
+schedule.scheduleJob('38 15 1-10 * *', myMonthlyFunction);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
